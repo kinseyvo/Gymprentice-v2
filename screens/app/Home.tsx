@@ -11,7 +11,7 @@ const buttonLabels = [
     'Challenges',
     'Settings',
     'Community',
-    'More',
+    'Locations',
 ];
 
 export default function HomeScreen({ navigation }: any) {

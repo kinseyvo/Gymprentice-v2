@@ -9,7 +9,7 @@ import ScheduleScreen from '../screens/app/Schedule';
 import ChallengesScreen from '../screens/app/Challenges';
 import SettingsScreen from '../screens/app/Settings';
 import CommunityScreen from '../screens/app/Community';
-import MoreScreen from '../screens/app/More';
+import LocationsScreen from '../screens/app/Locations';
 
 const Stack = createNativeStackNavigator();
 
@@ -24,7 +24,7 @@ export default function AppStack() {
             <Stack.Screen name="Challenges" component={ChallengesScreen} />
             <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen name="Community" component={CommunityScreen} />
-            <Stack.Screen name="More" component={MoreScreen} />
+            <Stack.Screen name="Locations" component={LocationsScreen} />
         </Stack.Navigator>
     );
 }
