@@ -1,10 +1,12 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import BottomFooter from '../../navigation/BottomFooter';
 
 export default function ProgressScreen() {
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Progress</Text>
+            <BottomFooter activeTab="Stats" />
         </View>
     );
 }

@@ -10,6 +10,7 @@ import ChallengesScreen from '../screens/app/Challenges';
 import SettingsScreen from '../screens/app/Settings';
 import CommunityScreen from '../screens/app/Community';
 import LocationsScreen from '../screens/app/Locations';
+import ProfileScreen from '../screens/app/Profile';
 
 const Stack = createNativeStackNavigator();
 
@@ -25,6 +26,7 @@ export default function AppStack() {
             <Stack.Screen name="Settings" component={SettingsScreen} />
             <Stack.Screen name="Community" component={CommunityScreen} />
             <Stack.Screen name="Locations" component={LocationsScreen} />
+            <Stack.Screen name="Profile" component={ProfileScreen} />
         </Stack.Navigator>
     );
 }
