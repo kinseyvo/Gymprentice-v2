@@ -46,8 +46,8 @@ export default StyleSheet.create({
     quickBox: {
         width: '31%',
         backgroundColor: '#1e293b',
-        paddingVertical: 22,
-        borderRadius: 16,
+        paddingVertical: 20,
+        borderRadius: 50,
         alignItems: 'center',
         marginBottom: 14,
     },

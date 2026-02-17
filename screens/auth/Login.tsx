@@ -5,8 +5,9 @@ import {
     TextInput,
     TouchableOpacity,
     StyleSheet,
+    Alert
 } from 'react-native';
-import { signInWithEmailAndPassword, sendPasswordResetEmail } from '@react-native-firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail, sendEmailVerification } from '@react-native-firebase/auth';
 import { auth } from '../../firebase/firebaseConfig';
 
 export default function LoginScreen({ navigation }: any) {
@@ -23,7 +24,38 @@ export default function LoginScreen({ navigation }: any) {
         }
 
         try {
-            await signInWithEmailAndPassword(auth, email, password);
+            // Sign in user
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Reload to get latest emailVerified status
+            await user.reload();
+
+            if (!user.emailVerified) {
+                // Sign them out immediately
+                await auth.signOut();
+
+                // Show alert and option to resend verification email
+                Alert.alert(
+                    'Email Not Verified',
+                    'Please verify your email before logging in. Check your inbox or spam folder.',
+                    [
+                        {
+                            text: 'Resend Email',
+                            onPress: async () => {
+                                await sendEmailVerification(user);
+                                Alert.alert('Verification Email Sent', 'Check your inbox.');
+                            }
+                        },
+                        { text: 'OK' }
+                    ]
+                );
+                return;
+            }
+
+            // If verified, navigate to Home
+            navigation.navigate('Home');
+
         } catch (error: any) {
             let message = 'Something went wrong. Please try again.';
 
@@ -53,7 +85,7 @@ export default function LoginScreen({ navigation }: any) {
 
         try {
             await sendPasswordResetEmail(auth, email);
-            setError('Password reset email sent. Check your inbox.');
+            Alert.alert('Password Reset', 'Password reset email sent. Check your inbox.');
         } catch (error: any) {
             setError(error.message);
         }
@@ -131,7 +163,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderRadius: 8,
         paddingHorizontal: 14,
-        marginBottom: 16,
+        marginBottom: 16
     },
     inputFlex: {
         flex: 1,

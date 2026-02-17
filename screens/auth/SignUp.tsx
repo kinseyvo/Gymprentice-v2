@@ -5,8 +5,9 @@ import {
     TextInput,
     TouchableOpacity,
     StyleSheet,
+    Alert
 } from 'react-native';
-import { createUserWithEmailAndPassword } from '@react-native-firebase/auth';
+import { createUserWithEmailAndPassword, sendEmailVerification } from '@react-native-firebase/auth';
 import { auth } from '../../firebase/firebaseConfig';
 
 export default function SignUpScreen({ navigation }: any) {
@@ -20,7 +21,7 @@ export default function SignUpScreen({ navigation }: any) {
     const handleSignUp = async () => {
         setError('');
 
-        if (!email || !password || !confirmPassword) {
+        if (!firstName || !lastName || !email || !password || !confirmPassword) {
             setError('Please fill all fields.');
             return;
         }
@@ -31,7 +32,30 @@ export default function SignUpScreen({ navigation }: any) {
         }
 
         try {
-            await createUserWithEmailAndPassword(auth, email, password);
+            // Only create the user (does NOT auto-login)
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+
+            // Send verification email
+            await sendEmailVerification(user);
+
+            // Sign out immediately so they are not logged in
+            await auth.signOut();
+
+            // Notify the user
+            Alert.alert(
+                'Account Created',
+                'Please check your email to verify your account before logging in.',
+                [{ text: 'OK', onPress: () => navigation.navigate('Login') }]
+            );
+
+            // Optionally clear inputs
+            setFirstName('');
+            setLastName('');
+            setEmail('');
+            setPassword('');
+            setConfirmPassword('');
+
         } catch (error: any) {
             let message = 'Something went wrong. Please try again.';
 
@@ -126,55 +150,14 @@ export default function SignUpScreen({ navigation }: any) {
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        justifyContent: 'center',
-        padding: 24
-    },
-    title: {
-        fontSize: 32,
-        fontWeight: 'bold',
-        marginBottom: 32,
-        textAlign: 'center' },
-    nameRow: {
-        flexDirection: 'row',
-        marginBottom: 16,
-        gap: 8
-    },
-    inputFlex: {
-        flex: 1,
-        borderWidth: 1,
-        borderRadius: 8,
-        padding: 14
-    },
-    input: {
-        borderWidth: 1,
-        borderRadius: 8,
-        padding: 14,
-        marginBottom: 16 },
-    button: {
-        backgroundColor: '#000',
-        padding: 16,
-        borderRadius: 8,
-        marginTop: 8
-    },
-    buttonText: {
-        color: '#fff',
-        textAlign: 'center',
-        fontWeight: 'bold'
-    },
-    footer: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        marginTop: 24
-    },
-    link: {
-        color: '#007AFF',
-        fontWeight: '600'
-    },
-    errorText: {
-        color: 'red',
-        marginBottom: 12,
-        textAlign: 'center'
-    },
+    container: { flex: 1, justifyContent: 'center', padding: 24, backgroundColor: '#fff' },
+    title: { fontSize: 32, fontWeight: 'bold', marginBottom: 32, textAlign: 'center' },
+    nameRow: { flexDirection: 'row', marginBottom: 16, gap: 8 },
+    inputFlex: { flex: 1, borderWidth: 1, borderRadius: 8, padding: 14 },
+    input: { borderWidth: 1, borderRadius: 8, padding: 14, marginBottom: 16 },
+    button: { backgroundColor: '#000', padding: 16, borderRadius: 8, marginTop: 8 },
+    buttonText: { color: '#fff', textAlign: 'center', fontWeight: 'bold' },
+    footer: { flexDirection: 'row', justifyContent: 'center', marginTop: 24 },
+    link: { color: '#007AFF', fontWeight: '600' },
+    errorText: { color: 'red', marginBottom: 12, textAlign: 'center' },
 });

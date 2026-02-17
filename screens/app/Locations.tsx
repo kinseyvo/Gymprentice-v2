@@ -22,7 +22,6 @@ export default function LocationsScreen() {
 
     const handleFindGyms = () => {
         if (zipCode.length !== 5) return;
-
         Keyboard.dismiss();
         setGyms(MOCK_GYMS);
     };
@@ -36,13 +35,14 @@ export default function LocationsScreen() {
 
     return (
         <SafeAreaView style={styles.container}>
-            <Text style={styles.title}>Find Gyms Near You</Text>
+            <Text style={styles.headerText}>Find Gyms Near You</Text>
 
             <View style={styles.inputContainer}>
                 <Text style={styles.label}>Zip Code</Text>
                 <TextInput
                     style={styles.textInput}
                     placeholder="99999"
+                    placeholderTextColor="#94a3b8"
                     value={zipCode}
                     onChangeText={setZipCode}
                     keyboardType="numeric"
@@ -75,41 +75,50 @@ export default function LocationsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
-        backgroundColor: '#ACB6E5',
+        backgroundColor: '#0f172a',
+        paddingHorizontal: 20,
+        paddingTop: 20,
     },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#3344FF',
-        marginBottom: 12,
+
+    headerText: {
+        fontSize: 26,
+        fontWeight: '700',
+        color: '#22c55e',
+        marginBottom: 20,
         textAlign: 'center',
     },
+
     inputContainer: {
-        marginBottom: 16,
+        marginBottom: 20,
     },
+
     label: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '600',
+        color: '#f8fafc',
         marginBottom: 6,
     },
+
     textInput: {
         borderWidth: 1,
-        borderColor: '#000',
-        borderRadius: 10,
-        padding: 10,
-        marginBottom: 10,
-        backgroundColor: '#fff',
-    },
-    button: {
-        backgroundColor: '#3344FF',
+        borderColor: '#334155',
+        borderRadius: 12,
         padding: 12,
-        borderRadius: 20,
+        marginBottom: 10,
+        backgroundColor: '#1e293b',
+        color: '#f8fafc',
+    },
+
+    button: {
+        backgroundColor: '#22c55e',
+        padding: 14,
+        borderRadius: 12,
         alignItems: 'center',
     },
+
     buttonText: {
-        color: '#fff',
-        fontWeight: 'bold',
+        color: '#0f172a',
+        fontWeight: '700',
         fontSize: 16,
     },
 
@@ -118,35 +127,41 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 2,
         borderStyle: 'dashed',
-        borderColor: '#3344FF',
-        backgroundColor: '#E8EBFF',
+        borderColor: '#22c55e',
+        backgroundColor: '#1e293b',
         alignItems: 'center',
         justifyContent: 'center',
-        marginBottom: 12,
+        marginBottom: 16,
     },
+
     mapTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
-        color: '#3344FF',
+        fontWeight: '700',
+        color: '#22c55e',
     },
+
     mapSubtitle: {
         fontSize: 14,
-        color: '#555',
+        color: '#94a3b8',
         marginTop: 4,
     },
 
     card: {
-        backgroundColor: '#fff',
-        padding: 12,
-        borderRadius: 10,
-        marginBottom: 10,
+        backgroundColor: '#1e293b',
+        padding: 16,
+        borderRadius: 16,
+        marginBottom: 12,
     },
+
     gymName: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '700',
+        color: '#f8fafc',
+        marginBottom: 4,
     },
+
     address: {
         fontSize: 14,
-        color: '#555',
+        color: '#94a3b8',
     },
 });

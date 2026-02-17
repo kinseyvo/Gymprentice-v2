@@ -7,6 +7,8 @@ import {
     Alert,
     TextInput,
     Modal,
+    Switch,
+    ScrollView,
 } from 'react-native';
 
 import {
@@ -16,15 +18,25 @@ import {
     reauthenticateWithCredential,
 } from '@react-native-firebase/auth';
 
-import { getFirestore, doc, deleteDoc, updateDoc, serverTimestamp } from '@react-native-firebase/firestore';
+import {
+    getFirestore,
+    doc,
+    deleteDoc,
+    updateDoc,
+    serverTimestamp,
+} from '@react-native-firebase/firestore';
+
 import { auth } from '../../firebase/firebaseConfig';
 
-const db = getFirestore(); // modular Firestore
+const db = getFirestore();
 
 export default function SettingsScreen() {
+
     const [showReauthModal, setShowReauthModal] = useState(false);
     const [password, setPassword] = useState('');
     const [pendingAction, setPendingAction] = useState<'delete' | 'deactivate' | null>(null);
+    const [darkModeEnabled, setDarkModeEnabled] = useState(true);
+    const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
     const handleLogout = async () => {
         try {
@@ -51,11 +63,8 @@ export default function SettingsScreen() {
             setShowReauthModal(false);
             setPassword('');
 
-            if (pendingAction === 'delete') {
-                await deleteAccount();
-            } else if (pendingAction === 'deactivate') {
-                await deactivateAccount();
-            }
+            if (pendingAction === 'delete') await deleteAccount();
+            if (pendingAction === 'deactivate') await deactivateAccount();
 
             setPendingAction(null);
         } catch {
@@ -68,16 +77,11 @@ export default function SettingsScreen() {
             const user = auth.currentUser;
             if (!user) return;
 
-            // Delete Firestore user data (modular API)
-            const userRef = doc(db, 'users', user.uid);
-            await deleteDoc(userRef);
-
-            // Delete Firebase Auth user
+            await deleteDoc(doc(db, 'users', user.uid));
             await deleteUser(user);
 
             Alert.alert('Account Deleted', 'Your account has been permanently deleted.');
-        } catch (err: any) {
-            console.log('Delete account error:', err);
+        } catch {
             Alert.alert('Error', 'Failed to delete account.');
         }
     };
@@ -87,8 +91,7 @@ export default function SettingsScreen() {
             const user = auth.currentUser;
             if (!user) return;
 
-            const userRef = doc(db, 'users', user.uid);
-            await updateDoc(userRef, {
+            await updateDoc(doc(db, 'users', user.uid), {
                 active: false,
                 deactivatedAt: serverTimestamp(),
             });
@@ -99,33 +102,77 @@ export default function SettingsScreen() {
                 'Account Deactivated',
                 'Your account has been deactivated. You can reactivate by logging in again.'
             );
-        } catch (err: any) {
-            console.log('Deactivate account error:', err);
+        } catch {
             Alert.alert('Error', 'Failed to deactivate account.');
         }
     };
 
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Settings</Text>
+        <ScrollView style={styles.container}>
+            <Text style={styles.headerText}>Settings</Text>
 
-            <TouchableOpacity style={styles.button} onPress={handleLogout}>
-                <Text style={styles.buttonText}>Log Out</Text>
-            </TouchableOpacity>
+            <View style={styles.card}>
+                <Text style={styles.sectionTitle}>General</Text>
 
-            <TouchableOpacity
-                style={styles.deactivateButton}
-                onPress={() => requestReauth('deactivate')}
-            >
-                <Text style={styles.buttonText}>Deactivate Account</Text>
-            </TouchableOpacity>
+                <View style={styles.row}>
+                    <Text style={styles.label}>Dark Mode</Text>
+                    <Switch
+                        value={darkModeEnabled}
+                        onValueChange={setDarkModeEnabled}
+                        trackColor={{ false: '#334155', true: '#22c55e' }}
+                        thumbColor="#fff"
+                    />
+                </View>
 
-            <TouchableOpacity
-                style={styles.deleteButton}
-                onPress={() => requestReauth('delete')}
-            >
-                <Text style={styles.buttonText}>Delete Account</Text>
-            </TouchableOpacity>
+                <View style={styles.divider} />
+
+                <View style={styles.row}>
+                    <Text style={styles.label}>Notifications</Text>
+                    <Switch
+                        value={notificationsEnabled}
+                        onValueChange={setNotificationsEnabled}
+                        trackColor={{ false: '#334155', true: '#22c55e' }}
+                        thumbColor="#fff"
+                    />
+                </View>
+            </View>
+
+            <View style={styles.card}>
+                <Text style={styles.sectionTitle}>Account</Text>
+
+                <TouchableOpacity
+                    style={styles.secondaryButton}
+                    onPress={() => requestReauth('deactivate')}
+                >
+                    <Text style={styles.buttonText}>Deactivate Account</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.info}>
+                    Account will reactivate if signed in.
+                </Text>
+
+                <View style={styles.divider} />
+
+                <TouchableOpacity
+                    style={styles.dangerButton}
+                    onPress={() => requestReauth('delete')}
+                >
+                    <Text style={styles.buttonText}>Delete Account</Text>
+                </TouchableOpacity>
+
+                <Text style={styles.info}>
+                    All user data and account will be deleted.
+                </Text>
+
+                <View style={styles.divider} />
+
+                <TouchableOpacity
+                    style={styles.primaryButton}
+                    onPress={handleLogout}
+                >
+                    <Text style={styles.buttonText}>Log Out</Text>
+                </TouchableOpacity>
+            </View>
 
             <Modal transparent visible={showReauthModal} animationType="fade">
                 <View style={styles.modalBackdrop}>
@@ -134,13 +181,17 @@ export default function SettingsScreen() {
 
                         <TextInput
                             secureTextEntry
-                            placeholder="Enter your password"
+                            placeholder="Enter password"
+                            placeholderTextColor="#94a3b8"
                             value={password}
                             onChangeText={setPassword}
                             style={styles.input}
                         />
 
-                        <TouchableOpacity style={styles.confirmButton} onPress={handleReauthenticate}>
+                        <TouchableOpacity
+                            style={styles.primaryButton}
+                            onPress={handleReauthenticate}
+                        >
                             <Text style={styles.buttonText}>Confirm</Text>
                         </TouchableOpacity>
 
@@ -151,84 +202,125 @@ export default function SettingsScreen() {
                                 setPendingAction(null);
                             }}
                         >
-                            <Text style={styles.cancelText}>Cancel</Text>
+                            <Text style={styles.cancel}>Cancel</Text>
                         </TouchableOpacity>
                     </View>
                 </View>
             </Modal>
-        </View>
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        justifyContent: 'center',
+        backgroundColor: '#0f172a',
+        padding: 20,
+    },
+
+    headerText: {
+        fontSize: 26,
+        fontWeight: '700',
+        color: '#22c55e',
+        marginBottom: 20,
+    },
+
+    card: {
+        backgroundColor: '#1e293b',
+        borderRadius: 18,
+        padding: 18,
+        marginBottom: 20,
+    },
+
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#f8fafc',
+        marginBottom: 15,
+    },
+
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
         alignItems: 'center',
-        padding: 20
     },
-    title: {
-        fontSize: 24,
-        marginBottom: 30
+
+    label: {
+        color: '#f8fafc',
+        fontSize: 14,
     },
-    button: {
-        backgroundColor: '#444',
-        padding: 15,
-        borderRadius: 8,
-        minWidth: 220,
+
+    divider: {
+        height: 1,
+        backgroundColor: '#334155',
+        marginVertical: 15,
+    },
+
+    primaryButton: {
+        backgroundColor: '#22c55e',
+        padding: 14,
+        borderRadius: 14,
         alignItems: 'center',
-        marginBottom: 15
     },
-    deactivateButton: {
-        backgroundColor: '#f59e0b',
-        padding: 15,
-        borderRadius: 8,
-        minWidth: 220,
+
+    secondaryButton: {
+        backgroundColor: '#334155',
+        padding: 14,
+        borderRadius: 14,
         alignItems: 'center',
-        marginBottom: 15
+        marginBottom: 8,
     },
-    deleteButton: {
-        backgroundColor: 'red',
-        padding: 15,
-        borderRadius: 8,
-        minWidth: 220,
-        alignItems: 'center'
+
+    dangerButton: {
+        backgroundColor: '#dc2626',
+        padding: 14,
+        borderRadius: 14,
+        alignItems: 'center',
+        marginBottom: 8,
     },
+
     buttonText: {
         color: '#fff',
-        fontWeight: 'bold'
+        fontWeight: '600',
     },
+
+    info: {
+        color: '#94a3b8',
+        fontSize: 13,
+        marginBottom: 10,
+    },
+
     modalBackdrop: {
         flex: 1,
         backgroundColor: 'rgba(0,0,0,0.6)',
         justifyContent: 'center',
-        alignItems: 'center'
+        alignItems: 'center',
     },
+
     modal: {
-        backgroundColor: '#fff',
+        backgroundColor: '#1e293b',
         width: '85%',
         padding: 20,
-        borderRadius: 10
+        borderRadius: 16,
     },
+
     modalTitle: {
+        color: '#f8fafc',
         fontSize: 18,
-        marginBottom: 10
+        marginBottom: 15,
     },
+
     input: {
-        borderWidth: 1,
-        borderRadius: 6,
-        padding: 10,
-        marginBottom: 15
-    },
-    confirmButton: { 
-        backgroundColor: '#000',
+        backgroundColor: '#0f172a',
+        color: '#fff',
         padding: 12,
-        borderRadius: 6,
-        alignItems: 'center',
-        marginBottom: 10
+        borderRadius: 10,
+        marginBottom: 15,
     },
-    cancelText: {
+
+    cancel: {
         textAlign: 'center',
-        color: '#007AFF'
+        color: '#94a3b8',
+        marginTop: 10,
     },
 });
