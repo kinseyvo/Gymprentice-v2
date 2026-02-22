@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
 import {
-    StyleSheet,
     View,
     Text,
+    StyleSheet,
+    ScrollView,
     TextInput,
     TouchableOpacity,
-    FlatList,
     Keyboard,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import BottomFooter from '../../navigation/BottomFooter';
 
 const MOCK_GYMS = [
     { id: '1', name: 'Iron Paradise Gym', address: '123 Main St' },
@@ -34,41 +34,40 @@ export default function LocationsScreen() {
     );
 
     return (
-        <SafeAreaView style={styles.container}>
-            <Text style={styles.headerText}>Find Gyms Near You</Text>
+        <View style={styles.container}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <Text style={styles.headerText}>Gym Locations</Text>
 
-            <View style={styles.inputContainer}>
-                <Text style={styles.label}>Zip Code</Text>
-                <TextInput
-                    style={styles.textInput}
-                    placeholder="99999"
-                    placeholderTextColor="#94a3b8"
-                    value={zipCode}
-                    onChangeText={setZipCode}
-                    keyboardType="numeric"
-                    maxLength={5}
-                    returnKeyType="search"
-                    onSubmitEditing={handleFindGyms}
-                />
-                <TouchableOpacity style={styles.button} onPress={handleFindGyms}>
-                    <Text style={styles.buttonText}>Search</Text>
-                </TouchableOpacity>
-            </View>
+                <View style={styles.inputContainer}>
+                    <Text style={styles.label}>Zip Code</Text>
+                    <TextInput
+                        style={styles.textInput}
+                        placeholder="99999"
+                        placeholderTextColor="#94a3b8"
+                        value={zipCode}
+                        onChangeText={setZipCode}
+                        keyboardType="numeric"
+                        maxLength={5}
+                        returnKeyType="search"
+                        onSubmitEditing={handleFindGyms}
+                    />
+                    <TouchableOpacity style={styles.button} onPress={handleFindGyms}>
+                        <Text style={styles.buttonText}>Search</Text>
+                    </TouchableOpacity>
+                </View>
 
-            {renderMapPlaceholder()}
+                {renderMapPlaceholder()}
 
-            <FlatList
-                data={gyms}
-                keyExtractor={(item) => item.id}
-                contentContainerStyle={{ paddingTop: 10 }}
-                renderItem={({ item }) => (
-                    <View style={styles.card}>
-                        <Text style={styles.gymName}>{item.name}</Text>
-                        <Text style={styles.address}>{item.address}</Text>
+                {gyms.map((gym) => (
+                    <View key={gym.id} style={styles.card}>
+                        <Text style={styles.gymName}>{gym.name}</Text>
+                        <Text style={styles.address}>{gym.address}</Text>
                     </View>
-                )}
-            />
-        </SafeAreaView>
+                ))}
+            </ScrollView>
+
+            <BottomFooter activeTab="Home" />
+        </View>
     );
 }
 
@@ -76,8 +75,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#0f172a',
+    },
+
+    scrollContent: {
         paddingHorizontal: 20,
         paddingTop: 20,
+        paddingBottom: 80, // space for footer
     },
 
     headerText: {
@@ -85,7 +88,7 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#22c55e',
         marginBottom: 20,
-        textAlign: 'center',
+        textAlign: 'left',
     },
 
     inputContainer: {
@@ -148,9 +151,9 @@ const styles = StyleSheet.create({
 
     card: {
         backgroundColor: '#1e293b',
-        padding: 16,
-        borderRadius: 16,
-        marginBottom: 12,
+        padding: 18,
+        borderRadius: 18,
+        marginBottom: 20,
     },
 
     gymName: {

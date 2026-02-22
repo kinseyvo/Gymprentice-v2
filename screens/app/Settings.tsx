@@ -27,6 +27,7 @@ import {
 } from '@react-native-firebase/firestore';
 
 import { auth } from '../../firebase/firebaseConfig';
+import BottomFooter from '../../navigation/BottomFooter';
 
 const db = getFirestore();
 
@@ -108,106 +109,110 @@ export default function SettingsScreen() {
     };
 
     return (
-        <ScrollView style={styles.container}>
-            <Text style={styles.headerText}>Settings</Text>
+        <View style={styles.container}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <Text style={styles.headerText}>Settings</Text>
 
-            <View style={styles.card}>
-                <Text style={styles.sectionTitle}>General</Text>
+                <View style={styles.card}>
+                    <Text style={styles.sectionTitle}>General</Text>
 
-                <View style={styles.row}>
-                    <Text style={styles.label}>Dark Mode</Text>
-                    <Switch
-                        value={darkModeEnabled}
-                        onValueChange={setDarkModeEnabled}
-                        trackColor={{ false: '#334155', true: '#22c55e' }}
-                        thumbColor="#fff"
-                    />
-                </View>
-
-                <View style={styles.divider} />
-
-                <View style={styles.row}>
-                    <Text style={styles.label}>Notifications</Text>
-                    <Switch
-                        value={notificationsEnabled}
-                        onValueChange={setNotificationsEnabled}
-                        trackColor={{ false: '#334155', true: '#22c55e' }}
-                        thumbColor="#fff"
-                    />
-                </View>
-            </View>
-
-            <View style={styles.card}>
-                <Text style={styles.sectionTitle}>Account</Text>
-
-                <TouchableOpacity
-                    style={styles.secondaryButton}
-                    onPress={() => requestReauth('deactivate')}
-                >
-                    <Text style={styles.buttonText}>Deactivate Account</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.info}>
-                    Account will reactivate if signed in.
-                </Text>
-
-                <View style={styles.divider} />
-
-                <TouchableOpacity
-                    style={styles.dangerButton}
-                    onPress={() => requestReauth('delete')}
-                >
-                    <Text style={styles.buttonText}>Delete Account</Text>
-                </TouchableOpacity>
-
-                <Text style={styles.info}>
-                    All user data and account will be deleted.
-                </Text>
-
-                <View style={styles.divider} />
-
-                <TouchableOpacity
-                    style={styles.primaryButton}
-                    onPress={handleLogout}
-                >
-                    <Text style={styles.buttonText}>Log Out</Text>
-                </TouchableOpacity>
-            </View>
-
-            <Modal transparent visible={showReauthModal} animationType="fade">
-                <View style={styles.modalBackdrop}>
-                    <View style={styles.modal}>
-                        <Text style={styles.modalTitle}>Confirm Password</Text>
-
-                        <TextInput
-                            secureTextEntry
-                            placeholder="Enter password"
-                            placeholderTextColor="#94a3b8"
-                            value={password}
-                            onChangeText={setPassword}
-                            style={styles.input}
+                    <View style={styles.row}>
+                        <Text style={styles.label}>Dark Mode</Text>
+                        <Switch
+                            value={darkModeEnabled}
+                            onValueChange={setDarkModeEnabled}
+                            trackColor={{ false: '#334155', true: '#22c55e' }}
+                            thumbColor="#fff"
                         />
+                    </View>
 
-                        <TouchableOpacity
-                            style={styles.primaryButton}
-                            onPress={handleReauthenticate}
-                        >
-                            <Text style={styles.buttonText}>Confirm</Text>
-                        </TouchableOpacity>
+                    <View style={styles.divider} />
 
-                        <TouchableOpacity
-                            onPress={() => {
-                                setShowReauthModal(false);
-                                setPassword('');
-                                setPendingAction(null);
-                            }}
-                        >
-                            <Text style={styles.cancel}>Cancel</Text>
-                        </TouchableOpacity>
+                    <View style={styles.row}>
+                        <Text style={styles.label}>Notifications</Text>
+                        <Switch
+                            value={notificationsEnabled}
+                            onValueChange={setNotificationsEnabled}
+                            trackColor={{ false: '#334155', true: '#22c55e' }}
+                            thumbColor="#fff"
+                        />
                     </View>
                 </View>
-            </Modal>
-        </ScrollView>
+
+                <View style={styles.card}>
+                    <Text style={styles.sectionTitle}>Account</Text>
+
+                    <TouchableOpacity
+                        style={styles.secondaryButton}
+                        onPress={() => requestReauth('deactivate')}
+                    >
+                        <Text style={styles.buttonText}>Deactivate Account</Text>
+                    </TouchableOpacity>
+
+                    <Text style={styles.info}>
+                        Account will reactivate if signed in.
+                    </Text>
+
+                    <View style={styles.divider} />
+
+                    <TouchableOpacity
+                        style={styles.dangerButton}
+                        onPress={() => requestReauth('delete')}
+                    >
+                        <Text style={styles.buttonText}>Delete Account</Text>
+                    </TouchableOpacity>
+
+                    <Text style={styles.info}>
+                        All user data and account will be deleted.
+                    </Text>
+
+                    <View style={styles.divider} />
+
+                    <TouchableOpacity
+                        style={styles.primaryButton}
+                        onPress={handleLogout}
+                    >
+                        <Text style={styles.buttonText}>Log Out</Text>
+                    </TouchableOpacity>
+                </View>
+
+                <Modal transparent visible={showReauthModal} animationType="fade">
+                    <View style={styles.modalBackdrop}>
+                        <View style={styles.modal}>
+                            <Text style={styles.modalTitle}>Confirm Password</Text>
+
+                            <TextInput
+                                secureTextEntry
+                                placeholder="Enter password"
+                                placeholderTextColor="#94a3b8"
+                                value={password}
+                                onChangeText={setPassword}
+                                style={styles.input}
+                            />
+
+                            <TouchableOpacity
+                                style={styles.primaryButton}
+                                onPress={handleReauthenticate}
+                            >
+                                <Text style={styles.buttonText}>Confirm</Text>
+                            </TouchableOpacity>
+
+                            <TouchableOpacity
+                                onPress={() => {
+                                    setShowReauthModal(false);
+                                    setPassword('');
+                                    setPendingAction(null);
+                                }}
+                            >
+                                <Text style={styles.cancel}>Cancel</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal>
+            </ScrollView>
+
+            <BottomFooter activeTab="Home" />
+        </View>
     );
 }
 
@@ -215,7 +220,12 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: '#0f172a',
-        padding: 20,
+    },
+
+    scrollContent: {
+        paddingHorizontal: 20,
+        paddingTop: 20,
+        paddingBottom: 80, // space for footer
     },
 
     headerText: {

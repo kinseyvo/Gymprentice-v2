@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         color: '#22c55e',
         marginBottom: 20,
-        textAlign: 'center',
+        textAlign: 'left',
     },
 
     card: {

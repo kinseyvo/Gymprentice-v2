@@ -6,18 +6,19 @@ import AppStack from './navigation/AppStack';
 import { onAuthStateChanged, FirebaseAuthTypes } from '@react-native-firebase/auth';
 import { auth } from './firebase/firebaseConfig'; // RNFirebase auth instance
 
+import { Provider as PaperProvider, DefaultTheme } from 'react-native-paper';
+
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   useEffect(() => {
-    // Listen for auth state changes
     const unsubscribe = onAuthStateChanged(auth, (user: FirebaseAuthTypes.User | null) => {
       setIsAuthenticated(!!user);
       setIsLoading(false);
     });
 
-    return () => unsubscribe(); // cleanup on unmount
+    return () => unsubscribe();
   }, []);
 
   if (isLoading) {
@@ -29,8 +30,11 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      {isAuthenticated ? <AppStack /> : <AuthStack />}
-    </NavigationContainer>
+    // wrap NavigationContainer with PaperProvider
+    <PaperProvider theme={DefaultTheme}>
+      <NavigationContainer>
+        {isAuthenticated ? <AppStack /> : <AuthStack />}
+      </NavigationContainer>
+    </PaperProvider>
   );
 }
