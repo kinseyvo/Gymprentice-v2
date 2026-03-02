@@ -207,18 +207,63 @@ export default function ChallengesScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: '#0f172a' },
-    scrollContent: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 80 },
-    headerText: { fontSize: 26, fontWeight: '700', color: '#22c55e', marginBottom: 20 },
-    card: { backgroundColor: '#1e293b', borderRadius: 18, padding: 18, marginBottom: 20 },
-    sectionTitle: { fontSize: 18, fontWeight: '600', color: '#f8fafc', marginBottom: 15 },
-    item: { marginBottom: 10 },
-    itemTitle: { fontSize: 15, fontWeight: '600', color: '#f8fafc' },
-    itemSubtitle: { fontSize: 13, color: '#94a3b8' },
-    statusText: { fontSize: 12, color: '#22c55e' },
-    emptyText: { color: '#94a3b8', fontSize: 14 },
-    divider: { height: 1, backgroundColor: '#334155', marginVertical: 10 },
-    grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between' },
+    container: {
+        flex: 1,
+        backgroundColor: '#0f172a'
+    },
+    scrollContent: {
+        paddingHorizontal: 20,
+        paddingTop: 20,
+        paddingBottom: 80
+    },
+    headerText: {
+        fontSize: 26,
+        fontWeight: '700',
+        color: '#22c55e',
+        marginBottom: 20
+    },
+    card: {
+        backgroundColor: '#1e293b',
+        borderRadius: 18,
+        padding: 18,
+        marginBottom: 20
+    },
+    sectionTitle: {
+        fontSize: 18,
+        fontWeight: '600',
+        color: '#f8fafc',
+        marginBottom: 15
+    },
+    item: {
+        marginBottom: 10
+    },
+    itemTitle: {
+        fontSize: 15,
+        fontWeight: '600',
+        color: '#f8fafc' 
+},
+    itemSubtitle: {
+        fontSize: 13,
+        color: '#94a3b8'
+    },
+    statusText: {
+        fontSize: 12,
+        color: '#22c55e'
+    },
+    emptyText: {
+        color: '#94a3b8',
+        fontSize: 14
+    },
+    divider: { 
+        height: 1,
+        backgroundColor: '#334155',
+        marginVertical: 10
+    },
+    grid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        justifyContent: 'space-between'
+    },
     categoryBox: {
         width: '48%',
         backgroundColor: '#0f172a',
@@ -227,16 +272,67 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 12,
     },
-    activeCategory: { borderWidth: 1, borderColor: '#22c55e' },
-    categoryText: { color: '#f8fafc', fontWeight: '600', fontSize: 14 },
-    challengeListItem: { paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: '#334155' },
-    buttonRow: { flexDirection: 'row', marginTop: 8, justifyContent: 'space-between' },
-    smallButton: { backgroundColor: '#22c55e', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-    quitButton: { backgroundColor: '#ef4444', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8 },
-    buttonText: { color: '#0f172a', fontWeight: '600', fontSize: 12 },
-    modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center' },
-    modalCard: { backgroundColor: '#1e293b', width: '85%', padding: 20, borderRadius: 16 },
-    modalTitle: { fontSize: 18, fontWeight: '700', color: '#f8fafc', marginBottom: 10 },
-    modalGoal: { fontSize: 14, color: '#22c55e', marginBottom: 8 },
-    modalDescription: { fontSize: 13, color: '#cbd5e1' },
+    activeCategory: {
+        borderWidth: 1,
+        borderColor: '#22c55e'
+    },
+    categoryText: {
+        color: '#f8fafc',
+        fontWeight: '600',
+        fontSize: 14
+    },
+    challengeListItem: {
+        paddingVertical: 10,
+        borderBottomWidth: 1,
+        borderBottomColor: '#334155'
+    },
+    buttonRow: {
+        flexDirection: 'row',
+        marginTop: 8,
+        justifyContent: 'space-between'
+    },
+    smallButton: {
+        backgroundColor: '#22c55e',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8
+    },
+    quitButton: {
+        backgroundColor: '#ef4444',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8
+    },
+    buttonText: {
+        color: '#0f172a',
+        fontWeight: '600',
+        fontSize: 12
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0,0,0,0.6)',
+        justifyContent: 'center',
+        alignItems: 'center'
+    },
+    modalCard: {
+        backgroundColor: '#1e293b',
+        width: '85%',
+        padding: 20,
+        borderRadius: 16
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: '700',
+        color: '#f8fafc',
+        marginBottom: 10
+    },
+    modalGoal: {
+        fontSize: 14,
+        color: '#22c55e',
+        marginBottom: 8
+    },
+    modalDescription: {
+        fontSize: 13,
+        color: '#cbd5e1'
+    },
 });
