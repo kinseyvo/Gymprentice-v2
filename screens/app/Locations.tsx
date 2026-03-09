@@ -39,7 +39,8 @@ export default function LocationsScreen() {
                 <Text style={styles.headerText}>Gym Locations</Text>
 
                 <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Zip Code</Text>
+                    <Text style={styles.label}>Zip Code:</Text>
+
                     <TextInput
                         style={styles.textInput}
                         placeholder="99999"
@@ -51,6 +52,7 @@ export default function LocationsScreen() {
                         returnKeyType="search"
                         onSubmitEditing={handleFindGyms}
                     />
+
                     <TouchableOpacity style={styles.button} onPress={handleFindGyms}>
                         <Text style={styles.buttonText}>Search</Text>
                     </TouchableOpacity>
@@ -80,7 +82,7 @@ const styles = StyleSheet.create({
     scrollContent: {
         paddingHorizontal: 20,
         paddingTop: 20,
-        paddingBottom: 80, // space for footer
+        paddingBottom: 80,
     },
 
     headerText: {
@@ -92,6 +94,8 @@ const styles = StyleSheet.create({
     },
 
     inputContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
         marginBottom: 20,
     },
 
@@ -99,30 +103,30 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: '600',
         color: '#f8fafc',
-        marginBottom: 6,
     },
 
     textInput: {
+        width: 110,
         borderWidth: 1,
         borderColor: '#334155',
-        borderRadius: 12,
-        padding: 12,
-        marginBottom: 10,
+        borderRadius: 10,
+        padding: 10,
+        marginHorizontal: 10,
         backgroundColor: '#1e293b',
         color: '#f8fafc',
     },
 
     button: {
         backgroundColor: '#22c55e',
-        padding: 14,
-        borderRadius: 12,
-        alignItems: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 14,
+        borderRadius: 10,
     },
 
     buttonText: {
         color: '#0f172a',
         fontWeight: '700',
-        fontSize: 16,
+        fontSize: 14,
     },
 
     mapPlaceholder: {
