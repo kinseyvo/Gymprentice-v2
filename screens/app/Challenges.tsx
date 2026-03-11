@@ -8,8 +8,8 @@ import {
     Modal,
 } from 'react-native';
 import BottomFooter from '../../navigation/BottomFooter';
-import { collection, getDocs } from '@react-native-firebase/firestore';
 import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
 
 type ChallengeStatus = 'in-progress' | 'done';
 
@@ -21,6 +21,8 @@ interface Challenge {
     category: string;
 }
 
+type ActiveChallenge = Challenge & { status: ChallengeStatus };
+
 type Category =
     | 'Strength'
     | 'Cardio'
@@ -31,13 +33,13 @@ type Category =
 
 export default function ChallengesScreen() {
     const [challenges, setChallenges] = useState<Challenge[]>([]);
-    const [activeChallenges, setActiveChallenges] = useState<
-        (Challenge & { status: ChallengeStatus })[]
-    >([]);
+    const [activeChallenges, setActiveChallenges] = useState<ActiveChallenge[]>([]);
     const [activeCategory, setActiveCategory] = useState<Category | null>(null);
     const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
 
-    // Fetch challenges from Firestore
+    const userId = auth().currentUser?.uid;
+
+    // Fetch all challenges
     useEffect(() => {
         const fetchChallenges = async () => {
             try {
@@ -58,26 +60,89 @@ export default function ChallengesScreen() {
         fetchChallenges();
     }, []);
 
+    // Load active challenges for this user from Firestore
+    useEffect(() => {
+        if (!userId) return;
+
+        const unsubscribe = firestore()
+            .collection('users')
+            .doc(userId)
+            .collection('activeChallenges')
+            .onSnapshot(snapshot => {
+                const activeData: ActiveChallenge[] = snapshot.docs.map(doc => ({
+                    id: doc.id,
+                    title: doc.data().title,
+                    goal: doc.data().goal,
+                    description: doc.data().description,
+                    category: doc.data().category,
+                    status: doc.data().status as ChallengeStatus,
+                }));
+                setActiveChallenges(activeData);
+            }, error => {
+                console.log('Error loading active challenges:', error);
+            });
+
+        return () => unsubscribe();
+    }, [userId]);
+
     const toggleCategory = (category: Category) => {
         setActiveCategory(activeCategory === category ? null : category);
     };
 
-    const joinChallenge = (challenge: Challenge) => {
+    const joinChallenge = async (challenge: Challenge) => {
+        if (!userId) return;
         if (activeChallenges.find(c => c.id === challenge.id)) return;
         if (activeChallenges.length >= 3) return;
 
-        setActiveChallenges([...activeChallenges, { ...challenge, status: 'in-progress' }]);
+        const newChallenge: ActiveChallenge = { ...challenge, status: 'in-progress' };
+        setActiveChallenges(prev => [...prev, newChallenge]);
+
+        try {
+            await firestore()
+                .collection('users')
+                .doc(userId)
+                .collection('activeChallenges')
+                .doc(challenge.id)
+                .set(newChallenge);
+        } catch (error) {
+            console.log('Error saving active challenge:', error);
+        }
+
         setSelectedChallenge(null);
     };
 
-    const updateStatus = (id: string, status: ChallengeStatus) => {
-        setActiveChallenges(
-            activeChallenges.map(c => (c.id === id ? { ...c, status } : c))
+    const updateStatus = async (id: string, status: ChallengeStatus) => {
+        if (!userId) return;
+        setActiveChallenges(prev =>
+            prev.map(c => (c.id === id ? { ...c, status } : c))
         );
+
+        try {
+            await firestore()
+                .collection('users')
+                .doc(userId)
+                .collection('activeChallenges')
+                .doc(id)
+                .update({ status });
+        } catch (error) {
+            console.log('Error updating challenge status:', error);
+        }
     };
 
-    const quitChallenge = (id: string) => {
-        setActiveChallenges(activeChallenges.filter(c => c.id !== id));
+    const quitChallenge = async (id: string) => {
+        if (!userId) return;
+        setActiveChallenges(prev => prev.filter(c => c.id !== id));
+
+        try {
+            await firestore()
+                .collection('users')
+                .doc(userId)
+                .collection('activeChallenges')
+                .doc(id)
+                .delete();
+        } catch (error) {
+            console.log('Error deleting active challenge:', error);
+        }
     };
 
     const challengesToShow = activeCategory
@@ -89,7 +154,6 @@ export default function ChallengesScreen() {
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <Text style={styles.headerText}>Challenges</Text>
 
-                {/* Active Challenges */}
                 <View style={styles.card}>
                     <Text style={styles.sectionTitle}>Active Challenges</Text>
                     {activeChallenges.length === 0 && (
@@ -129,13 +193,11 @@ export default function ChallengesScreen() {
                     ))}
                 </View>
 
-                {/* All Challenges / Filter by Category */}
                 <View style={styles.card}>
                     <Text style={styles.sectionTitle}>
                         {activeCategory ? `${activeCategory} Challenges` : 'All Challenges'}
                     </Text>
 
-                    {/* Category Buttons */}
                     <View style={styles.grid}>
                         {(['Strength', 'Cardio', 'Endurance', 'Flexibility', 'Nutrition', 'Habits'] as Category[]).map(
                             category => (
@@ -153,7 +215,6 @@ export default function ChallengesScreen() {
                         )}
                     </View>
 
-                    {/* Challenge List */}
                     {challengesToShow.length === 0 && (
                         <Text style={styles.emptyText}>No challenges found in Firestore.</Text>
                     )}
@@ -170,7 +231,6 @@ export default function ChallengesScreen() {
                 </View>
             </ScrollView>
 
-            {/* Challenge Modal */}
             <Modal visible={!!selectedChallenge} transparent animationType="fade">
                 <View style={styles.modalOverlay}>
                     <View style={styles.modalCard}>
