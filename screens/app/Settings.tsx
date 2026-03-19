@@ -28,6 +28,7 @@ import {
 
 import { auth } from '../../firebase/firebaseConfig';
 import BottomFooter from '../../navigation/BottomFooter';
+import { useTheme } from '../../src/context/ThemeContext';
 
 const db = getFirestore();
 
@@ -36,7 +37,7 @@ export default function SettingsScreen() {
     const [showReauthModal, setShowReauthModal] = useState(false);
     const [password, setPassword] = useState('');
     const [pendingAction, setPendingAction] = useState<'delete' | 'deactivate' | null>(null);
-    const [darkModeEnabled, setDarkModeEnabled] = useState(true);
+    const { darkMode, setDarkMode } = useTheme();
     const [notificationsEnabled, setNotificationsEnabled] = useState(true);
 
     const handleLogout = async () => {
@@ -119,8 +120,8 @@ export default function SettingsScreen() {
                     <View style={styles.row}>
                         <Text style={styles.label}>Dark Mode</Text>
                         <Switch
-                            value={darkModeEnabled}
-                            onValueChange={setDarkModeEnabled}
+                            value={darkMode}
+                            onValueChange={setDarkMode}
                             trackColor={{ false: '#334155', true: '#22c55e' }}
                             thumbColor="#fff"
                         />

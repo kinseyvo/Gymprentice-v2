@@ -4,9 +4,10 @@ import { NavigationContainer } from '@react-navigation/native';
 import AuthStack from './navigation/AuthStack';
 import AppStack from './navigation/AppStack';
 import { onAuthStateChanged, FirebaseAuthTypes } from '@react-native-firebase/auth';
-import { auth } from './firebase/firebaseConfig'; // RNFirebase auth instance
+import { auth } from './firebase/firebaseConfig';
 
 import { Provider as PaperProvider, DefaultTheme } from 'react-native-paper';
+import { ThemeProvider } from './src/context/ThemeContext';
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
@@ -30,11 +31,12 @@ export default function App() {
   }
 
   return (
-    // wrap NavigationContainer with PaperProvider
-    <PaperProvider theme={DefaultTheme}>
-      <NavigationContainer>
-        {isAuthenticated ? <AppStack /> : <AuthStack />}
-      </NavigationContainer>
-    </PaperProvider>
+    <ThemeProvider>
+      <PaperProvider theme={DefaultTheme}>
+        <NavigationContainer>
+          {isAuthenticated ? <AppStack /> : <AuthStack />}
+        </NavigationContainer>
+      </PaperProvider>
+    </ThemeProvider>
   );
 }

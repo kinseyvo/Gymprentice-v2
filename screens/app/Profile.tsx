@@ -1,9 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, TextInput, Image } from 'react-native';
+import {
+    View,
+    Text,
+    StyleSheet,
+    TouchableOpacity,
+    ScrollView,
+    TextInput,
+    Image,
+    Alert,
+    Platform,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import storage from '@react-native-firebase/storage';
 import { Picker } from '@react-native-picker/picker';
+import ImagePicker from 'react-native-image-crop-picker';
 import BottomFooter from '../../navigation/BottomFooter';
 
 export default function ProfileScreen() {
@@ -17,6 +29,7 @@ export default function ProfileScreen() {
     const [height, setHeight] = useState('');
     const [gymGoal, setGymGoal] = useState('');
     const [mealGoal, setMealGoal] = useState('');
+    const [profilePicUri, setProfilePicUri] = useState<string | null>(null);
 
     useEffect(() => {
         const loadUserData = async () => {
@@ -33,6 +46,7 @@ export default function ProfileScreen() {
                 setHeight(data?.height || '');
                 setGymGoal(data?.gymGoal || '');
                 setMealGoal(data?.mealGoal || '');
+                setProfilePicUri(data?.profilePic || null);
             } else {
                 setEmail(user.email || '');
             }
@@ -57,6 +71,7 @@ export default function ProfileScreen() {
                         height,
                         gymGoal,
                         mealGoal,
+                        profilePic: profilePicUri,
                     },
                     { merge: true }
                 );
@@ -68,19 +83,93 @@ export default function ProfileScreen() {
         }
     };
 
+    const handleChangePhoto = () => {
+        Alert.alert(
+            "Change Photo",
+            "Choose photo source",
+            [
+                {
+                    text: "Camera",
+                    onPress: async () => {
+                        try {
+                            const result = await ImagePicker.openCamera({
+                                width: 300,
+                                height: 300,
+                                cropping: true, // enable cropping UI
+                                cropperCircleOverlay: true, // circular crop for profile pic
+                                compressImageQuality: 0.8,
+                            });
+                            uploadPhoto(result.path);
+                        } catch (e) {
+                            console.log('Camera cancelled or error:', e);
+                        }
+                    },
+                },
+                {
+                    text: "Gallery",
+                    onPress: async () => {
+                        try {
+                            const result = await ImagePicker.openPicker({
+                                width: 300,
+                                height: 300,
+                                cropping: true,
+                                cropperCircleOverlay: true,
+                                compressImageQuality: 0.8,
+                            });
+                            uploadPhoto(result.path);
+                        } catch (e) {
+                            console.log('Gallery cancelled or error:', e);
+                        }
+                    },
+                },
+                { text: "Cancel", style: "cancel" },
+            ]
+        );
+    };
+
+    const uploadPhoto = async (uri: string) => {
+        const user = auth().currentUser;
+        if (!user) return;
+
+        const filename = `profilePics/${user.uid}.jpg`;
+        const reference = storage().ref(filename);
+
+        try {
+            const uploadUri = Platform.OS === 'ios' ? uri.replace('file://', '') : uri;
+            await reference.putFile(uploadUri);
+
+            const url = await reference.getDownloadURL();
+            setProfilePicUri(url);
+
+            await firestore().collection('users').doc(user.uid).set(
+                { profilePic: url },
+                { merge: true }
+            );
+            console.log('Photo uploaded successfully');
+        } catch (error) {
+            console.log('Error uploading photo:', error);
+            Alert.alert('Upload failed', 'Could not upload photo. Please try again.');
+        }
+    };
+
     return (
         <View style={styles.container}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
                 <Text style={styles.headerText}>Profile</Text>
 
-                {/* Profile Image */}
+                {/* Profile Image + Change Button */}
                 <View style={styles.profilePicContainer}>
-                    <Image source={{ uri: 'https://via.placeholder.com/120' }} style={styles.profilePic} />
+                    <Image
+                        source={{ uri: profilePicUri || 'https://via.placeholder.com/120' }}
+                        style={styles.profilePic}
+                    />
+                    <TouchableOpacity style={styles.changePhotoButton} onPress={handleChangePhoto}>
+                        <Text style={styles.changePhotoText}>Change Photo</Text>
+                    </TouchableOpacity>
                 </View>
 
                 {/* Profile Fields */}
                 <View style={styles.card}>
-                    {/* Name */}
                     <Text style={styles.label}>Name</Text>
                     <TextInput
                         style={styles.input}
@@ -91,11 +180,9 @@ export default function ProfileScreen() {
                         placeholderTextColor="#64748b"
                     />
 
-                    {/* Email */}
                     <Text style={styles.label}>Email</Text>
                     <TextInput style={styles.input} value={email} editable={false} />
 
-                    {/* Weight */}
                     <Text style={styles.label}>Weight</Text>
                     <TextInput
                         style={styles.input}
@@ -106,7 +193,6 @@ export default function ProfileScreen() {
                         placeholderTextColor="#64748b"
                     />
 
-                    {/* Height */}
                     <Text style={styles.label}>Height</Text>
                     <TextInput
                         style={styles.input}
@@ -117,7 +203,6 @@ export default function ProfileScreen() {
                         placeholderTextColor="#64748b"
                     />
 
-                    {/* Gym Goal Picker */}
                     <Text style={styles.label}>Gym Goal</Text>
                     <Picker
                         selectedValue={gymGoal}
@@ -133,7 +218,6 @@ export default function ProfileScreen() {
                         <Picker.Item label="General Fitness" value="General Fitness" />
                     </Picker>
 
-                    {/* Meal Goal Picker */}
                     <Text style={styles.label}>Meal Goal</Text>
                     <Picker
                         selectedValue={mealGoal}
@@ -197,6 +281,17 @@ const styles = StyleSheet.create({
         width: 120,
         height: 120,
         borderRadius: 60,
+    },
+    changePhotoButton: {
+        marginTop: 10,
+        backgroundColor: '#22c55e',
+        paddingVertical: 6,
+        paddingHorizontal: 16,
+        borderRadius: 12,
+    },
+    changePhotoText: {
+        color: '#0f172a',
+        fontWeight: '600',
     },
     card: {
         backgroundColor: '#1e293b',
