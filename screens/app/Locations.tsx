@@ -9,6 +9,7 @@ import {
     Keyboard,
 } from 'react-native';
 import BottomFooter from '../../navigation/BottomFooter';
+import { useTheme } from '../../src/context/ThemeContext';
 
 const MOCK_GYMS = [
     { id: '1', name: 'Iron Paradise Gym', address: '123 Main St' },
@@ -20,6 +21,8 @@ export default function LocationsScreen() {
     const [zipCode, setZipCode] = useState('');
     const [gyms, setGyms] = useState<typeof MOCK_GYMS>([]);
 
+    const { darkMode } = useTheme();
+
     const handleFindGyms = () => {
         if (zipCode.length !== 5) return;
         Keyboard.dismiss();
@@ -27,22 +30,70 @@ export default function LocationsScreen() {
     };
 
     const renderMapPlaceholder = () => (
-        <View style={styles.mapPlaceholder}>
-            <Text style={styles.mapTitle}>Map View</Text>
-            <Text style={styles.mapSubtitle}>Map preview coming soon</Text>
+        <View
+            style={[
+                styles.mapPlaceholder,
+                {
+                    backgroundColor: darkMode ? '#1e293b' : '#e2e8f0',
+                    borderColor: darkMode ? '#22c55e' : '#16a34a',
+                },
+            ]}
+        >
+            <Text
+                style={[
+                    styles.mapTitle,
+                    { color: darkMode ? '#22c55e' : '#16a34a' },
+                ]}
+            >
+                Map View
+            </Text>
+            <Text
+                style={[
+                    styles.mapSubtitle,
+                    { color: darkMode ? '#94a3b8' : '#475569' },
+                ]}
+            >
+                Map preview coming soon
+            </Text>
         </View>
     );
 
     return (
-        <View style={styles.container}>
+        <View
+            style={[
+                styles.container,
+                { backgroundColor: darkMode ? '#0f172a' : '#ffffff' },
+            ]}
+        >
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.headerText}>Gym Locations</Text>
+                <Text
+                    style={[
+                        styles.headerText,
+                        { color: darkMode ? '#22c55e' : '#16a34a' },
+                    ]}
+                >
+                    Gym Locations
+                </Text>
 
                 <View style={styles.inputContainer}>
-                    <Text style={styles.label}>Zip Code:</Text>
+                    <Text
+                        style={[
+                            styles.label,
+                            { color: darkMode ? '#f8fafc' : '#0f172a' },
+                        ]}
+                    >
+                        Zip Code:
+                    </Text>
 
                     <TextInput
-                        style={styles.textInput}
+                        style={[
+                            styles.textInput,
+                            {
+                                backgroundColor: darkMode ? '#1e293b' : '#e2e8f0',
+                                color: darkMode ? '#f8fafc' : '#0f172a',
+                                borderColor: darkMode ? '#334155' : '#cbd5e1',
+                            },
+                        ]}
                         placeholder="99999"
                         placeholderTextColor="#94a3b8"
                         value={zipCode}
@@ -61,9 +112,31 @@ export default function LocationsScreen() {
                 {renderMapPlaceholder()}
 
                 {gyms.map((gym) => (
-                    <View key={gym.id} style={styles.card}>
-                        <Text style={styles.gymName}>{gym.name}</Text>
-                        <Text style={styles.address}>{gym.address}</Text>
+                    <View
+                        key={gym.id}
+                        style={[
+                            styles.card,
+                            {
+                                backgroundColor: darkMode ? '#1e293b' : '#e2e8f0',
+                            },
+                        ]}
+                    >
+                        <Text
+                            style={[
+                                styles.gymName,
+                                { color: darkMode ? '#f8fafc' : '#0f172a' },
+                            ]}
+                        >
+                            {gym.name}
+                        </Text>
+                        <Text
+                            style={[
+                                styles.address,
+                                { color: darkMode ? '#94a3b8' : '#475569' },
+                            ]}
+                        >
+                            {gym.address}
+                        </Text>
                     </View>
                 ))}
             </ScrollView>

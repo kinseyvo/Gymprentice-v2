@@ -10,6 +10,7 @@ import {
 import BottomFooter from '../../navigation/BottomFooter';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import { useTheme } from '../../src/context/ThemeContext';
 
 type ChallengeStatus = 'in-progress' | 'done';
 
@@ -37,9 +38,10 @@ export default function ChallengesScreen() {
     const [activeCategory, setActiveCategory] = useState<Category | null>(null);
     const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
 
+    const { darkMode } = useTheme();
+
     const userId = auth().currentUser?.uid;
 
-    // Fetch all challenges
     useEffect(() => {
         const fetchChallenges = async () => {
             try {
@@ -60,7 +62,6 @@ export default function ChallengesScreen() {
         fetchChallenges();
     }, []);
 
-    // Load active challenges for this user from Firestore
     useEffect(() => {
         if (!userId) return;
 
@@ -78,8 +79,6 @@ export default function ChallengesScreen() {
                     status: doc.data().status as ChallengeStatus,
                 }));
                 setActiveChallenges(activeData);
-            }, error => {
-                console.log('Error loading active challenges:', error);
             });
 
         return () => unsubscribe();
@@ -97,52 +96,42 @@ export default function ChallengesScreen() {
         const newChallenge: ActiveChallenge = { ...challenge, status: 'in-progress' };
         setActiveChallenges(prev => [...prev, newChallenge]);
 
-        try {
-            await firestore()
-                .collection('users')
-                .doc(userId)
-                .collection('activeChallenges')
-                .doc(challenge.id)
-                .set(newChallenge);
-        } catch (error) {
-            console.log('Error saving active challenge:', error);
-        }
+        await firestore()
+            .collection('users')
+            .doc(userId)
+            .collection('activeChallenges')
+            .doc(challenge.id)
+            .set(newChallenge);
 
         setSelectedChallenge(null);
     };
 
     const updateStatus = async (id: string, status: ChallengeStatus) => {
         if (!userId) return;
+
         setActiveChallenges(prev =>
             prev.map(c => (c.id === id ? { ...c, status } : c))
         );
 
-        try {
-            await firestore()
-                .collection('users')
-                .doc(userId)
-                .collection('activeChallenges')
-                .doc(id)
-                .update({ status });
-        } catch (error) {
-            console.log('Error updating challenge status:', error);
-        }
+        await firestore()
+            .collection('users')
+            .doc(userId)
+            .collection('activeChallenges')
+            .doc(id)
+            .update({ status });
     };
 
     const quitChallenge = async (id: string) => {
         if (!userId) return;
+
         setActiveChallenges(prev => prev.filter(c => c.id !== id));
 
-        try {
-            await firestore()
-                .collection('users')
-                .doc(userId)
-                .collection('activeChallenges')
-                .doc(id)
-                .delete();
-        } catch (error) {
-            console.log('Error deleting active challenge:', error);
-        }
+        await firestore()
+            .collection('users')
+            .doc(userId)
+            .collection('activeChallenges')
+            .doc(id)
+            .delete();
     };
 
     const challengesToShow = activeCategory
@@ -150,20 +139,57 @@ export default function ChallengesScreen() {
         : challenges;
 
     return (
-        <View style={styles.container}>
+        <View style={[
+            styles.container,
+            { backgroundColor: darkMode ? '#0f172a' : '#ffffff' }
+        ]}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.headerText}>Challenges</Text>
+                <Text style={[
+                    styles.headerText,
+                    { color: darkMode ? '#22c55e' : '#16a34a' }
+                ]}>
+                    Challenges
+                </Text>
 
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Active Challenges</Text>
+                <View style={[
+                    styles.card,
+                    { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }
+                ]}>
+                    <Text style={[
+                        styles.sectionTitle,
+                        { color: darkMode ? '#f8fafc' : '#0f172a' }
+                    ]}>
+                        Active Challenges
+                    </Text>
+
                     {activeChallenges.length === 0 && (
-                        <Text style={styles.emptyText}>No active challenges yet.</Text>
+                        <Text style={[
+                            styles.emptyText,
+                            { color: darkMode ? '#94a3b8' : '#475569' }
+                        ]}>
+                            No active challenges yet.
+                        </Text>
                     )}
+
                     {activeChallenges.map(challenge => (
                         <View key={challenge.id} style={styles.item}>
-                            <Text style={styles.itemTitle}>{challenge.title}</Text>
-                            <Text style={styles.itemSubtitle}>{challenge.goal}</Text>
-                            <Text style={styles.statusText}>Status: {challenge.status}</Text>
+                            <Text style={[
+                                styles.itemTitle,
+                                { color: darkMode ? '#f8fafc' : '#0f172a' }
+                            ]}>
+                                {challenge.title}
+                            </Text>
+
+                            <Text style={[
+                                styles.itemSubtitle,
+                                { color: darkMode ? '#94a3b8' : '#475569' }
+                            ]}>
+                                {challenge.goal}
+                            </Text>
+
+                            <Text style={styles.statusText}>
+                                Status: {challenge.status}
+                            </Text>
 
                             <View style={styles.buttonRow}>
                                 <TouchableOpacity
@@ -193,8 +219,14 @@ export default function ChallengesScreen() {
                     ))}
                 </View>
 
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>
+                <View style={[
+                    styles.card,
+                    { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }
+                ]}>
+                    <Text style={[
+                        styles.sectionTitle,
+                        { color: darkMode ? '#f8fafc' : '#0f172a' }
+                    ]}>
                         {activeCategory ? `${activeCategory} Challenges` : 'All Challenges'}
                     </Text>
 
@@ -205,27 +237,44 @@ export default function ChallengesScreen() {
                                     key={category}
                                     style={[
                                         styles.categoryBox,
+                                        { backgroundColor: darkMode ? '#0f172a' : '#e2e8f0' },
                                         activeCategory === category && styles.activeCategory,
                                     ]}
                                     onPress={() => toggleCategory(category)}
                                 >
-                                    <Text style={styles.categoryText}>{category}</Text>
+                                    <Text style={[
+                                        styles.categoryText,
+                                        { color: darkMode ? '#f8fafc' : '#0f172a' }
+                                    ]}>
+                                        {category}
+                                    </Text>
                                 </TouchableOpacity>
                             )
                         )}
                     </View>
 
-                    {challengesToShow.length === 0 && (
-                        <Text style={styles.emptyText}>No challenges found in Firestore.</Text>
-                    )}
                     {challengesToShow.map(challenge => (
                         <TouchableOpacity
                             key={challenge.id}
-                            style={styles.challengeListItem}
+                            style={[
+                                styles.challengeListItem,
+                                { borderBottomColor: darkMode ? '#334155' : '#cbd5e1' }
+                            ]}
                             onPress={() => setSelectedChallenge(challenge)}
                         >
-                            <Text style={styles.itemTitle}>{challenge.title}</Text>
-                            <Text style={styles.itemSubtitle}>{challenge.goal}</Text>
+                            <Text style={[
+                                styles.itemTitle,
+                                { color: darkMode ? '#f8fafc' : '#0f172a' }
+                            ]}>
+                                {challenge.title}
+                            </Text>
+
+                            <Text style={[
+                                styles.itemSubtitle,
+                                { color: darkMode ? '#94a3b8' : '#475569' }
+                            ]}>
+                                {challenge.goal}
+                            </Text>
                         </TouchableOpacity>
                     ))}
                 </View>
@@ -233,12 +282,29 @@ export default function ChallengesScreen() {
 
             <Modal visible={!!selectedChallenge} transparent animationType="fade">
                 <View style={styles.modalOverlay}>
-                    <View style={styles.modalCard}>
+                    <View style={[
+                        styles.modalCard,
+                        { backgroundColor: darkMode ? '#1e293b' : '#ffffff' }
+                    ]}>
                         {selectedChallenge && (
                             <>
-                                <Text style={styles.modalTitle}>{selectedChallenge.title}</Text>
-                                <Text style={styles.modalGoal}>{selectedChallenge.goal}</Text>
-                                <Text style={styles.modalDescription}>{selectedChallenge.description}</Text>
+                                <Text style={[
+                                    styles.modalTitle,
+                                    { color: darkMode ? '#f8fafc' : '#0f172a' }
+                                ]}>
+                                    {selectedChallenge.title}
+                                </Text>
+
+                                <Text style={styles.modalGoal}>
+                                    {selectedChallenge.goal}
+                                </Text>
+
+                                <Text style={[
+                                    styles.modalDescription,
+                                    { color: darkMode ? '#cbd5e1' : '#334155' }
+                                ]}>
+                                    {selectedChallenge.description}
+                                </Text>
 
                                 <View style={styles.buttonRow}>
                                     <TouchableOpacity
@@ -300,8 +366,8 @@ const styles = StyleSheet.create({
     itemTitle: {
         fontSize: 15,
         fontWeight: '600',
-        color: '#f8fafc' 
-},
+        color: '#f8fafc'
+    },
     itemSubtitle: {
         fontSize: 13,
         color: '#94a3b8'
@@ -314,7 +380,7 @@ const styles = StyleSheet.create({
         color: '#94a3b8',
         fontSize: 14
     },
-    divider: { 
+    divider: {
         height: 1,
         backgroundColor: '#334155',
         marginVertical: 10

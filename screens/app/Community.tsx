@@ -14,6 +14,7 @@ import {
 import BottomFooter from '../../navigation/BottomFooter';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import { useTheme } from '../../src/context/ThemeContext';
 
 type Review = {
     id: string;
@@ -38,15 +39,15 @@ export default function CommunityScreen() {
     const [rating, setRating] = useState(0);
     const [category, setCategory] = useState<'gym' | 'workout'>('gym');
 
-    useEffect(() => {
+    const { darkMode } = useTheme();
 
+    useEffect(() => {
         const unsubscribe = firestore()
             .collection('reviews')
             .orderBy('createdAt', 'desc')
             .onSnapshot(snapshot => {
 
                 const data: Review[] = snapshot.docs.map(doc => {
-
                     const d = doc.data();
 
                     return {
@@ -61,19 +62,15 @@ export default function CommunityScreen() {
                         likedBy: d.likedBy ?? [],
                         createdAt: d.createdAt
                     };
-
                 });
 
                 setReviews(data);
-
             });
 
         return () => unsubscribe();
-
     }, []);
 
     const timeAgo = (timestamp: any) => {
-
         if (!timestamp) return '';
 
         const now = new Date();
@@ -88,27 +85,23 @@ export default function CommunityScreen() {
     };
 
     const createPost = async () => {
-
         if (!postName || !postDescription || rating === 0) {
             Alert.alert("Please fill all fields");
             return;
         }
 
         try {
-
-            await firestore()
-                .collection('reviews')
-                .add({
-                    userId: auth().currentUser?.uid,
-                    username: auth().currentUser?.displayName ?? 'Anonymous',
-                    postName,
-                    postDescription,
-                    rating,
-                    category,
-                    likes: 0,
-                    likedBy: [],
-                    createdAt: firestore.FieldValue.serverTimestamp()
-                });
+            await firestore().collection('reviews').add({
+                userId: auth().currentUser?.uid,
+                username: auth().currentUser?.displayName ?? 'Anonymous',
+                postName,
+                postDescription,
+                rating,
+                category,
+                likes: 0,
+                likedBy: [],
+                createdAt: firestore.FieldValue.serverTimestamp()
+            });
 
             setModalVisible(false);
             setPostName('');
@@ -116,50 +109,36 @@ export default function CommunityScreen() {
             setRating(0);
 
         } catch (error) {
-            console.log(error);
             Alert.alert("Error creating post");
         }
     };
 
     const deletePost = async (id: string) => {
-
-        Alert.alert(
-            "Delete Post",
-            "Are you sure you want to delete this post?",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: async () => {
-                        await firestore()
-                            .collection('reviews')
-                            .doc(id)
-                            .delete();
-                    }
+        Alert.alert("Delete Post", "Are you sure?", [
+            { text: "Cancel", style: "cancel" },
+            {
+                text: "Delete",
+                style: "destructive",
+                onPress: async () => {
+                    await firestore().collection('reviews').doc(id).delete();
                 }
-            ]
-        );
+            }
+        ]);
     };
 
     const likePost = async (review: Review) => {
-
         const userId = auth().currentUser?.uid;
-
         if (!userId) return;
 
         if (review.likedBy.includes(userId)) {
-            Alert.alert("Already liked", "You already liked this post.");
+            Alert.alert("Already liked");
             return;
         }
 
-        const ref = firestore().collection('reviews').doc(review.id);
-
-        await ref.update({
+        await firestore().collection('reviews').doc(review.id).update({
             likes: firestore.FieldValue.increment(1),
             likedBy: firestore.FieldValue.arrayUnion(userId)
         });
-
     };
 
     const renderStars = () => {
@@ -167,31 +146,27 @@ export default function CommunityScreen() {
         for (let i = 1; i <= 5; i++) {
             stars.push(
                 <TouchableOpacity key={i} onPress={() => setRating(i)}>
-                    <Text style={i <= rating ? styles.starSelected : styles.star}>
-                        ★
-                    </Text>
+                    <Text style={i <= rating ? styles.starSelected : styles.star}>★</Text>
                 </TouchableOpacity>
             );
         }
-
         return <View style={styles.starRow}>{stars}</View>;
     };
 
     const renderPosts = (section: 'gym' | 'workout') => {
-
         const filtered = reviews.filter(r => r?.category === section);
+
         if (filtered.length === 0) {
             return (
-                <Text style={styles.emptyText}>
-                    No posts yet. Be the first to post!
+                <Text style={[styles.emptyText, { color: darkMode ? '#94a3b8' : '#475569' }]}>
+                    No posts yet.
                 </Text>
             );
-
         }
 
         return filtered.map(r => (
-            <View key={r.id} style={styles.item}>
-                <Text style={styles.itemTitle}>
+            <View key={r.id} style={[styles.item, { borderBottomColor: darkMode ? '#334155' : '#cbd5e1' }]}>
+                <Text style={[styles.itemTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
                     {r.postName}
                 </Text>
 
@@ -199,25 +174,19 @@ export default function CommunityScreen() {
                     {'★'.repeat(r.rating)}{'☆'.repeat(5 - r.rating)}
                 </Text>
 
-                <Text style={styles.itemSubtitle}>
-                    by <Text style={styles.username}>{r.username}</Text> • {timeAgo(r.createdAt)}
+                <Text style={[styles.itemSubtitle, { color: darkMode ? '#94a3b8' : '#475569' }]}>
+                    by <Text style={styles.username}>{r.username}</Text>
                 </Text>
 
-                <Text style={styles.itemSubtitle}>
+                <Text style={[styles.itemSubtitle, { color: darkMode ? '#94a3b8' : '#475569' }]}>
                     {r.postDescription}
                 </Text>
 
-                <TouchableOpacity
-                    style={styles.likeButton}
-                    onPress={() => likePost(r)}
-                >
-                    <Text style={styles.likeText}>
-                        👍 {r.likes} Likes
-                    </Text>
+                <TouchableOpacity onPress={() => likePost(r)}>
+                    <Text style={styles.likeText}>👍 {r.likes}</Text>
                 </TouchableOpacity>
 
                 {r.userId === auth().currentUser?.uid && (
-
                     <TouchableOpacity onPress={() => deletePost(r.id)}>
                         <Text style={styles.delete}>Delete</Text>
                     </TouchableOpacity>
@@ -227,25 +196,27 @@ export default function CommunityScreen() {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: darkMode ? '#0f172a' : '#ffffff' }]}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.headerText}>Community</Text>
-                <TouchableOpacity
-                    style={styles.createButton}
-                    onPress={() => setModalVisible(true)}
-                >
-                    <Text style={styles.createButtonText}>
-                        Create Post
-                    </Text>
+                <Text style={[styles.headerText, { color: darkMode ? '#22c55e' : '#16a34a' }]}>
+                    Community
+                </Text>
+
+                <TouchableOpacity style={styles.createButton} onPress={() => setModalVisible(true)}>
+                    <Text style={styles.createButtonText}>Create Post</Text>
                 </TouchableOpacity>
 
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Gym Reviews</Text>
+                <View style={[styles.card, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
+                    <Text style={[styles.sectionTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
+                        Gym Reviews
+                    </Text>
                     {renderPosts('gym')}
                 </View>
 
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Workout Reviews</Text>
+                <View style={[styles.card, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
+                    <Text style={[styles.sectionTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
+                        Workout Reviews
+                    </Text>
                     {renderPosts('workout')}
                 </View>
 
@@ -254,16 +225,17 @@ export default function CommunityScreen() {
             <BottomFooter activeTab="Home" />
 
             <Modal visible={modalVisible} animationType="slide">
-
-                <View style={styles.modalContainer}>
-                    <Text style={styles.modalTitle}>Create Post</Text>
+                <View style={[styles.modalContainer, { backgroundColor: darkMode ? '#0f172a' : '#ffffff' }]}>
+                    <Text style={[styles.modalTitle, { color: darkMode ? '#ffffff' : '#0f172a' }]}>
+                        Create Post
+                    </Text>
 
                     <TextInput
                         placeholder="Post Name"
                         placeholderTextColor="#94a3b8"
                         value={postName}
                         onChangeText={setPostName}
-                        style={styles.input}
+                        style={[styles.input, { backgroundColor: darkMode ? '#334155' : '#e2e8f0', color: darkMode ? 'white' : '#0f172a' }]}
                     />
 
                     <TextInput
@@ -271,38 +243,16 @@ export default function CommunityScreen() {
                         placeholderTextColor="#94a3b8"
                         value={postDescription}
                         onChangeText={setPostDescription}
-                        style={styles.input}
+                        style={[styles.input, { backgroundColor: darkMode ? '#334155' : '#e2e8f0', color: darkMode ? 'white' : '#0f172a' }]}
                         multiline
                     />
 
-                    <Text style={styles.label}>Rating</Text>
-
+                    <Text style={[styles.label, { color: darkMode ? 'white' : '#0f172a' }]}>Rating</Text>
                     {renderStars()}
-
-                    <Text style={styles.label}>Category</Text>
-                    <View style={styles.categoryRow}>
-
-                        <TouchableOpacity
-                            style={category === 'gym' ? styles.categorySelected : styles.category}
-                            onPress={() => setCategory('gym')}
-                        >
-                            <Text style={styles.categoryText}>Gym</Text>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                            style={category === 'workout' ? styles.categorySelected : styles.category}
-                            onPress={() => setCategory('workout')}
-                        >
-                            <Text style={styles.categoryText}>Workout</Text>
-                        </TouchableOpacity>
-
-                    </View>
 
                     <Button title="Post" onPress={createPost} />
                     <Button title="Cancel" color="gray" onPress={() => setModalVisible(false)} />
-
                 </View>
-
             </Modal>
         </View>
     );

@@ -17,9 +17,11 @@ import storage from '@react-native-firebase/storage';
 import { Picker } from '@react-native-picker/picker';
 import ImagePicker from 'react-native-image-crop-picker';
 import BottomFooter from '../../navigation/BottomFooter';
+import { useTheme } from '../../src/context/ThemeContext';
 
 export default function ProfileScreen() {
     const navigation = useNavigation<any>();
+    const { darkMode } = useTheme();
 
     const [editing, setEditing] = useState(false);
 
@@ -77,54 +79,45 @@ export default function ProfileScreen() {
                 );
 
             setEditing(false);
-            console.log('Profile saved!');
         } catch (error) {
             console.log('Error saving profile:', error);
         }
     };
 
     const handleChangePhoto = () => {
-        Alert.alert(
-            "Change Photo",
-            "Choose photo source",
-            [
-                {
-                    text: "Camera",
-                    onPress: async () => {
-                        try {
-                            const result = await ImagePicker.openCamera({
-                                width: 300,
-                                height: 300,
-                                cropping: true, // enable cropping UI
-                                cropperCircleOverlay: true, // circular crop for profile pic
-                                compressImageQuality: 0.8,
-                            });
-                            uploadPhoto(result.path);
-                        } catch (e) {
-                            console.log('Camera cancelled or error:', e);
-                        }
-                    },
+        Alert.alert("Change Photo", "Choose photo source", [
+            {
+                text: "Camera",
+                onPress: async () => {
+                    try {
+                        const result = await ImagePicker.openCamera({
+                            width: 300,
+                            height: 300,
+                            cropping: true,
+                            cropperCircleOverlay: true,
+                            compressImageQuality: 0.8,
+                        });
+                        uploadPhoto(result.path);
+                    } catch { }
                 },
-                {
-                    text: "Gallery",
-                    onPress: async () => {
-                        try {
-                            const result = await ImagePicker.openPicker({
-                                width: 300,
-                                height: 300,
-                                cropping: true,
-                                cropperCircleOverlay: true,
-                                compressImageQuality: 0.8,
-                            });
-                            uploadPhoto(result.path);
-                        } catch (e) {
-                            console.log('Gallery cancelled or error:', e);
-                        }
-                    },
+            },
+            {
+                text: "Gallery",
+                onPress: async () => {
+                    try {
+                        const result = await ImagePicker.openPicker({
+                            width: 300,
+                            height: 300,
+                            cropping: true,
+                            cropperCircleOverlay: true,
+                            compressImageQuality: 0.8,
+                        });
+                        uploadPhoto(result.path);
+                    } catch { }
                 },
-                { text: "Cancel", style: "cancel" },
-            ]
-        );
+            },
+            { text: "Cancel", style: "cancel" },
+        ]);
     };
 
     const uploadPhoto = async (uri: string) => {
@@ -145,19 +138,18 @@ export default function ProfileScreen() {
                 { profilePic: url },
                 { merge: true }
             );
-            console.log('Photo uploaded successfully');
-        } catch (error) {
-            console.log('Error uploading photo:', error);
-            Alert.alert('Upload failed', 'Could not upload photo. Please try again.');
+        } catch {
+            Alert.alert('Upload failed');
         }
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: darkMode ? '#0f172a' : '#ffffff' }]}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.headerText}>Profile</Text>
+                <Text style={[styles.headerText, { color: darkMode ? '#22c55e' : '#16a34a' }]}>
+                    Profile
+                </Text>
 
-                {/* Profile Image + Change Button */}
                 <View style={styles.profilePicContainer}>
                     <Image
                         source={{ uri: profilePicUri || 'https://via.placeholder.com/120' }}
@@ -168,48 +160,40 @@ export default function ProfileScreen() {
                     </TouchableOpacity>
                 </View>
 
-                {/* Profile Fields */}
-                <View style={styles.card}>
-                    <Text style={styles.label}>Name</Text>
+                <View style={[styles.card, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
+                    <Text style={[styles.label, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>Name</Text>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, { backgroundColor: darkMode ? '#0f172a' : '#ffffff', color: darkMode ? '#f8fafc' : '#0f172a' }]}
                         value={name}
                         editable={editing}
                         onChangeText={setName}
-                        placeholder="Enter name"
-                        placeholderTextColor="#64748b"
                     />
 
-                    <Text style={styles.label}>Email</Text>
-                    <TextInput style={styles.input} value={email} editable={false} />
+                    <Text style={[styles.label, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>Email</Text>
+                    <TextInput style={[styles.input, { color: darkMode ? '#f8fafc' : '#0f172a' }]} value={email} editable={false} />
 
-                    <Text style={styles.label}>Weight</Text>
+                    <Text style={[styles.label, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>Weight</Text>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, { backgroundColor: darkMode ? '#0f172a' : '#ffffff', color: darkMode ? '#f8fafc' : '#0f172a' }]}
                         value={weight}
                         editable={editing}
                         onChangeText={setWeight}
-                        placeholder="Enter weight"
-                        placeholderTextColor="#64748b"
                     />
 
-                    <Text style={styles.label}>Height</Text>
+                    <Text style={[styles.label, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>Height</Text>
                     <TextInput
-                        style={styles.input}
+                        style={[styles.input, { backgroundColor: darkMode ? '#0f172a' : '#ffffff', color: darkMode ? '#f8fafc' : '#0f172a' }]}
                         value={height}
                         editable={editing}
                         onChangeText={setHeight}
-                        placeholder="Enter height"
-                        placeholderTextColor="#64748b"
                     />
 
-                    <Text style={styles.label}>Gym Goal</Text>
+                    <Text style={[styles.label, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>Gym Goal</Text>
                     <Picker
                         selectedValue={gymGoal}
                         onValueChange={(itemValue) => setGymGoal(itemValue)}
                         enabled={editing}
-                        style={styles.picker}
-                        dropdownIconColor="#22c55e"
+                        style={[styles.picker, { backgroundColor: darkMode ? '#0f172a' : '#ffffff', color: darkMode ? '#f8fafc' : '#0f172a' }]}
                     >
                         <Picker.Item label="Select goal" value="" />
                         <Picker.Item label="Lose Weight" value="Lose Weight" />
@@ -218,13 +202,12 @@ export default function ProfileScreen() {
                         <Picker.Item label="General Fitness" value="General Fitness" />
                     </Picker>
 
-                    <Text style={styles.label}>Meal Goal</Text>
+                    <Text style={[styles.label, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>Meal Goal</Text>
                     <Picker
                         selectedValue={mealGoal}
                         onValueChange={(itemValue) => setMealGoal(itemValue)}
                         enabled={editing}
-                        style={styles.picker}
-                        dropdownIconColor="#22c55e"
+                        style={[styles.picker, { backgroundColor: darkMode ? '#0f172a' : '#ffffff', color: darkMode ? '#f8fafc' : '#0f172a' }]}
                     >
                         <Picker.Item label="Select goal" value="" />
                         <Picker.Item label="High Protein" value="High Protein" />
@@ -234,19 +217,13 @@ export default function ProfileScreen() {
                     </Picker>
                 </View>
 
-                {/* Edit / Save Buttons */}
-                {!editing ? (
-                    <TouchableOpacity style={styles.button} onPress={() => setEditing(true)}>
-                        <Text style={styles.buttonText}>Edit Profile</Text>
-                    </TouchableOpacity>
-                ) : (
-                    <TouchableOpacity style={styles.button} onPress={handleSave}>
-                        <Text style={styles.buttonText}>Save Profile</Text>
-                    </TouchableOpacity>
-                )}
+                <TouchableOpacity style={[styles.button, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]} onPress={() => setEditing(!editing)}>
+                    <Text style={styles.buttonText}>
+                        {editing ? 'Save Profile' : 'Edit Profile'}
+                    </Text>
+                </TouchableOpacity>
 
-                {/* Settings */}
-                <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Settings')}>
+                <TouchableOpacity style={[styles.button, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]} onPress={() => navigation.navigate('Settings')}>
                     <Text style={styles.buttonText}>Settings</Text>
                 </TouchableOpacity>
             </ScrollView>
@@ -258,29 +235,26 @@ export default function ProfileScreen() {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
-        backgroundColor: '#0f172a',
+        flex: 1
     },
     scrollContent: {
         paddingHorizontal: 20,
         paddingTop: 20,
-        paddingBottom: 80,
+        paddingBottom: 80
     },
     headerText: {
         fontSize: 26,
         fontWeight: '700',
-        color: '#22c55e',
-        marginBottom: 20,
-        textAlign: 'left',
+        marginBottom: 20
     },
     profilePicContainer: {
         alignItems: 'center',
-        marginBottom: 20,
+        marginBottom: 20
     },
     profilePic: {
         width: 120,
         height: 120,
-        borderRadius: 60,
+        borderRadius: 60
     },
     changePhotoButton: {
         marginTop: 10,
@@ -291,34 +265,27 @@ const styles = StyleSheet.create({
     },
     changePhotoText: {
         color: '#0f172a',
-        fontWeight: '600',
+        fontWeight: '600'
     },
     card: {
-        backgroundColor: '#1e293b',
         borderRadius: 18,
         padding: 18,
-        marginBottom: 20,
+        marginBottom: 20
     },
     label: {
-        color: '#f8fafc',
         marginTop: 10,
         marginBottom: 4,
-        fontWeight: '600',
+        fontWeight: '600'
     },
     input: {
-        backgroundColor: '#0f172a',
         borderRadius: 10,
-        padding: 10,
-        color: '#f8fafc',
+        padding: 10
     },
     picker: {
-        backgroundColor: '#0f172a',
-        color: '#f8fafc',
         marginBottom: 10,
-        borderRadius: 10,
+        borderRadius: 10
     },
     button: {
-        backgroundColor: '#1e293b',
         paddingVertical: 14,
         paddingHorizontal: 30,
         borderRadius: 18,

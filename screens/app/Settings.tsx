@@ -33,7 +33,6 @@ import { useTheme } from '../../src/context/ThemeContext';
 const db = getFirestore();
 
 export default function SettingsScreen() {
-
     const [showReauthModal, setShowReauthModal] = useState(false);
     const [password, setPassword] = useState('');
     const [pendingAction, setPendingAction] = useState<'delete' | 'deactivate' | null>(null);
@@ -109,16 +108,22 @@ export default function SettingsScreen() {
         }
     };
 
-    return (
-        <View style={styles.container}>
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.headerText}>Settings</Text>
+    const bgColor = darkMode ? '#0f172a' : '#ffffff';
+    const cardColor = darkMode ? '#1e293b' : '#f1f5f9';
+    const textColor = darkMode ? '#f8fafc' : '#0f172a';
+    const secondaryColor = darkMode ? '#94a3b8' : '#64748b';
+    const inputBg = darkMode ? '#334155' : '#e2e8f0';
 
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>General</Text>
+    return (
+        <View style={[styles.container, { backgroundColor: bgColor }]}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+                <Text style={[styles.headerText, { color: '#22c55e' }]}>Settings</Text>
+
+                <View style={[styles.card, { backgroundColor: cardColor }]}>
+                    <Text style={[styles.sectionTitle, { color: textColor }]}>General</Text>
 
                     <View style={styles.row}>
-                        <Text style={styles.label}>Dark Mode</Text>
+                        <Text style={[styles.label, { color: textColor }]}>Dark Mode</Text>
                         <Switch
                             value={darkMode}
                             onValueChange={setDarkMode}
@@ -127,10 +132,10 @@ export default function SettingsScreen() {
                         />
                     </View>
 
-                    <View style={styles.divider} />
+                    <View style={[styles.divider, { backgroundColor: darkMode ? '#334155' : '#cbd5e1' }]} />
 
                     <View style={styles.row}>
-                        <Text style={styles.label}>Notifications</Text>
+                        <Text style={[styles.label, { color: textColor }]}>Notifications</Text>
                         <Switch
                             value={notificationsEnabled}
                             onValueChange={setNotificationsEnabled}
@@ -140,62 +145,62 @@ export default function SettingsScreen() {
                     </View>
                 </View>
 
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Account</Text>
+                <View style={[styles.card, { backgroundColor: cardColor }]}>
+                    <Text style={[styles.sectionTitle, { color: textColor }]}>Account</Text>
 
                     <TouchableOpacity
-                        style={styles.secondaryButton}
+                        style={[styles.secondaryButton, { backgroundColor: darkMode ? '#334155' : '#e2e8f0' }]}
                         onPress={() => requestReauth('deactivate')}
                     >
-                        <Text style={styles.buttonText}>Deactivate Account</Text>
+                        <Text style={[styles.buttonText, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>Deactivate Account</Text>
                     </TouchableOpacity>
 
-                    <Text style={styles.info}>
+                    <Text style={[styles.info, { color: secondaryColor }]}>
                         Account will reactivate if signed in.
                     </Text>
 
-                    <View style={styles.divider} />
+                    <View style={[styles.divider, { backgroundColor: darkMode ? '#334155' : '#cbd5e1' }]} />
 
                     <TouchableOpacity
-                        style={styles.dangerButton}
+                        style={[styles.dangerButton, { backgroundColor: '#dc2626' }]}
                         onPress={() => requestReauth('delete')}
                     >
                         <Text style={styles.buttonText}>Delete Account</Text>
                     </TouchableOpacity>
 
-                    <Text style={styles.info}>
+                    <Text style={[styles.info, { color: secondaryColor }]}>
                         All user data and account will be deleted.
                     </Text>
 
-                    <View style={styles.divider} />
+                    <View style={[styles.divider, { backgroundColor: darkMode ? '#334155' : '#cbd5e1' }]} />
 
                     <TouchableOpacity
-                        style={styles.primaryButton}
+                        style={[styles.primaryButton, { backgroundColor: '#22c55e' }]}
                         onPress={handleLogout}
                     >
-                        <Text style={styles.buttonText}>Log Out</Text>
+                        <Text style={[styles.buttonText, { color: darkMode ? '#0f172a' : '#ffffff' }]}>Log Out</Text>
                     </TouchableOpacity>
                 </View>
 
                 <Modal transparent visible={showReauthModal} animationType="fade">
-                    <View style={styles.modalBackdrop}>
-                        <View style={styles.modal}>
-                            <Text style={styles.modalTitle}>Confirm Password</Text>
+                    <View style={[styles.modalBackdrop]}>
+                        <View style={[styles.modal, { backgroundColor: cardColor }]}>
+                            <Text style={[styles.modalTitle, { color: textColor }]}>Confirm Password</Text>
 
                             <TextInput
                                 secureTextEntry
                                 placeholder="Enter password"
-                                placeholderTextColor="#94a3b8"
+                                placeholderTextColor={secondaryColor}
                                 value={password}
                                 onChangeText={setPassword}
-                                style={styles.input}
+                                style={[styles.input, { backgroundColor: inputBg, color: textColor }]}
                             />
 
                             <TouchableOpacity
-                                style={styles.primaryButton}
+                                style={[styles.primaryButton, { backgroundColor: '#22c55e' }]}
                                 onPress={handleReauthenticate}
                             >
-                                <Text style={styles.buttonText}>Confirm</Text>
+                                <Text style={[styles.buttonText, { color: darkMode ? '#0f172a' : '#ffffff' }]}>Confirm</Text>
                             </TouchableOpacity>
 
                             <TouchableOpacity
@@ -205,7 +210,7 @@ export default function SettingsScreen() {
                                     setPendingAction(null);
                                 }}
                             >
-                                <Text style={styles.cancel}>Cancel</Text>
+                                <Text style={[styles.cancel, { color: secondaryColor }]}>Cancel</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -220,24 +225,21 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#0f172a',
     },
 
     scrollContent: {
         paddingHorizontal: 20,
         paddingTop: 20,
-        paddingBottom: 80, // space for footer
+        paddingBottom: 80,
     },
 
     headerText: {
         fontSize: 26,
         fontWeight: '700',
-        color: '#22c55e',
         marginBottom: 20,
     },
 
     card: {
-        backgroundColor: '#1e293b',
         borderRadius: 18,
         padding: 18,
         marginBottom: 20,
@@ -246,7 +248,6 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#f8fafc',
         marginBottom: 15,
     },
 
@@ -257,25 +258,22 @@ const styles = StyleSheet.create({
     },
 
     label: {
-        color: '#f8fafc',
         fontSize: 14,
     },
 
     divider: {
         height: 1,
-        backgroundColor: '#334155',
         marginVertical: 15,
     },
 
     primaryButton: {
-        backgroundColor: '#22c55e',
         padding: 14,
         borderRadius: 14,
         alignItems: 'center',
+        marginBottom: 8,
     },
 
     secondaryButton: {
-        backgroundColor: '#334155',
         padding: 14,
         borderRadius: 14,
         alignItems: 'center',
@@ -283,7 +281,6 @@ const styles = StyleSheet.create({
     },
 
     dangerButton: {
-        backgroundColor: '#dc2626',
         padding: 14,
         borderRadius: 14,
         alignItems: 'center',
@@ -291,12 +288,10 @@ const styles = StyleSheet.create({
     },
 
     buttonText: {
-        color: '#fff',
         fontWeight: '600',
     },
 
     info: {
-        color: '#94a3b8',
         fontSize: 13,
         marginBottom: 10,
     },
@@ -309,21 +304,17 @@ const styles = StyleSheet.create({
     },
 
     modal: {
-        backgroundColor: '#1e293b',
         width: '85%',
         padding: 20,
         borderRadius: 16,
     },
 
     modalTitle: {
-        color: '#f8fafc',
         fontSize: 18,
         marginBottom: 15,
     },
 
     input: {
-        backgroundColor: '#0f172a',
-        color: '#fff',
         padding: 12,
         borderRadius: 10,
         marginBottom: 15,
@@ -331,7 +322,6 @@ const styles = StyleSheet.create({
 
     cancel: {
         textAlign: 'center',
-        color: '#94a3b8',
         marginTop: 10,
     },
 });

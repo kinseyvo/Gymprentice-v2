@@ -12,6 +12,7 @@ import BottomFooter from '../../navigation/BottomFooter';
 import Config from 'react-native-config';
 import firestore from '@react-native-firebase/firestore';
 import auth from '@react-native-firebase/auth';
+import { useTheme } from '../../src/context/ThemeContext';
 
 export default function WorkoutsScreen() {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
@@ -19,7 +20,9 @@ export default function WorkoutsScreen() {
     const [loading, setLoading] = useState(false);
     const [cache, setCache] = useState<Record<string, any[]>>({});
     const [expandedWorkout, setExpandedWorkout] = useState<string | null>(null);
-    const [savedWorkouts, setSavedWorkouts] = useState<Record<string, any>>({}); // key: name, value: workout object
+    const [savedWorkouts, setSavedWorkouts] = useState<Record<string, any>>({});
+
+    const { darkMode } = useTheme();
 
     const categories = [
         'Strength',
@@ -39,7 +42,6 @@ export default function WorkoutsScreen() {
         Strongman: 'strongman',
     };
 
-    // Fetch saved workouts on screen load
     useEffect(() => {
         const user = auth().currentUser;
         if (!user) return;
@@ -88,7 +90,7 @@ export default function WorkoutsScreen() {
             const response = await fetch(
                 `https://api.api-ninjas.com/v1/exercises?type=${type}`,
                 {
-                    headers: { 
+                    headers: {
                         'X-Api-Key': apiKey
                     }
                 }
@@ -168,23 +170,25 @@ export default function WorkoutsScreen() {
         return (
             <View key={workout.name} style={styles.workoutRow}>
                 <TouchableOpacity
-                    style={styles.workoutCard}
+                    style={[
+                        styles.workoutCard,
+                        { backgroundColor: darkMode ? '#0f172a' : '#e2e8f0' }
+                    ]}
                     onPress={() => toggleExpand(workout.name)}
                 >
-                    <Text style={styles.workoutItem}>• {workout.name}</Text>
+                    <Text style={[styles.workoutItem, { color: darkMode ? '#cbd5f5' : '#0f172a' }]}>
+                        • {workout.name}
+                    </Text>
 
                     {isExpanded && (
                         <View style={styles.expandedContent}>
-                            <Text style={styles.workoutSub}>
+                            <Text style={[styles.workoutSub, { color: darkMode ? '#64748b' : '#475569' }]}>
                                 Muscle: {workout.muscle || 'N/A'}
                             </Text>
-                            <Text style={styles.workoutSub}>
+                            <Text style={[styles.workoutSub, { color: darkMode ? '#64748b' : '#475569' }]}>
                                 Equipment: {workout.equipments || 'N/A'}
                             </Text>
-                            <Text style={styles.workoutSub}>
-                                Muscle: {workout.muscle || 'N/A'}
-                            </Text>
-                            <Text style={styles.workoutSub}>
+                            <Text style={[styles.workoutSub, { color: darkMode ? '#64748b' : '#475569' }]}>
                                 Type: {workout.type || 'N/A'}
                             </Text>
 
@@ -215,25 +219,31 @@ export default function WorkoutsScreen() {
     };
 
     return (
-        <View style={styles.container}>
+        <View style={[styles.container, { backgroundColor: darkMode ? '#0f172a' : '#ffffff' }]}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
-                <Text style={styles.headerText}>Workouts</Text>
+                <Text style={[styles.headerText, { color: darkMode ? '#22c55e' : '#16a34a' }]}>
+                    Workouts
+                </Text>
 
-                <Text style={styles.subText}>
+                <Text style={[styles.subText, { color: darkMode ? '#94a3b8' : '#475569' }]}>
                     Tap a category to explore workouts
                 </Text>
 
                 {Object.keys(savedWorkouts).length > 0 && (
-                    <View style={styles.card}>
-                        <Text style={styles.sectionTitle}>My Saved Workouts</Text>
+                    <View style={[styles.card, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
+                        <Text style={[styles.sectionTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
+                            My Saved Workouts
+                        </Text>
                         {Object.values(savedWorkouts).map((workout: any) =>
                             renderWorkoutCard(workout)
                         )}
                     </View>
                 )}
 
-                <View style={styles.card}>
-                    <Text style={styles.sectionTitle}>Categories</Text>
+                <View style={[styles.card, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
+                    <Text style={[styles.sectionTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
+                        Categories
+                    </Text>
                     <View style={styles.categoryGrid}>
                         {categories.map((category) => {
                             const isSelected = selectedCategory === category;
@@ -242,6 +252,7 @@ export default function WorkoutsScreen() {
                                     key={category}
                                     style={[
                                         styles.categoryBox,
+                                        { backgroundColor: darkMode ? '#0f172a' : '#ffffff' },
                                         isSelected && styles.selectedCategoryBox,
                                     ]}
                                     onPress={() => toggleCategory(category)}
@@ -249,6 +260,7 @@ export default function WorkoutsScreen() {
                                     <Text
                                         style={[
                                             styles.categoryText,
+                                            { color: darkMode ? '#f8fafc' : '#0f172a' },
                                             isSelected && styles.selectedCategoryText,
                                         ]}
                                     >
@@ -261,8 +273,8 @@ export default function WorkoutsScreen() {
                 </View>
 
                 {selectedCategory && (
-                    <View style={styles.card}>
-                        <Text style={styles.sectionTitle}>
+                    <View style={[styles.card, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
+                        <Text style={[styles.sectionTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
                             {selectedCategory} Workouts
                         </Text>
 
@@ -273,7 +285,9 @@ export default function WorkoutsScreen() {
                                 renderWorkoutCard(workout)
                             )
                         ) : (
-                            <Text style={styles.noDataText}>No workouts found</Text>
+                            <Text style={[styles.noDataText, { color: darkMode ? '#64748b' : '#475569' }]}>
+                                No workouts found
+                            </Text>
                         )}
                     </View>
                 )}
