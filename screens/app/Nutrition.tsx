@@ -27,7 +27,6 @@ export default function NutritionScreen() {
     const [caloriesInput, setCaloriesInput] = useState('');
     const [recentFoods, setRecentFoods] = useState<any[]>([]);
 
-    // 🔥 SAFE CALORIE ESTIMATE
     const estimateCalories = (meal: any) => {
         if (!meal) return 0;
 
@@ -37,7 +36,6 @@ export default function NutritionScreen() {
         return Math.round((carbs * 4) + (fat * 9));
     };
 
-    // 🔄 ROTATING MEALS
     const fetchMeals = async () => {
         try {
             const apiKey = Config.API_NINJAS_KEY;
@@ -75,7 +73,6 @@ export default function NutritionScreen() {
 
                 const data = await res.json();
 
-                // 🔥 NULL SAFE CHECK
                 if (data && data.length > 0 && data[0]) {
                     results.push(data[0]);
                 }
@@ -91,7 +88,6 @@ export default function NutritionScreen() {
         fetchMeals();
     }, []);
 
-    // 🔥 FIRESTORE REALTIME LOAD
     useEffect(() => {
         const user = auth().currentUser;
         if (!user) return;
@@ -112,7 +108,6 @@ export default function NutritionScreen() {
         return () => unsubscribe();
     }, []);
 
-    // 💾 SAVE FOOD
     const addFood = async () => {
         const user = auth().currentUser;
 
@@ -255,7 +250,7 @@ export default function NutritionScreen() {
                             </Text>
 
                             {meals
-                                .filter((meal) => meal) // 🔥 remove nulls
+                                .filter((meal) => meal)
                                 .filter((meal) => {
                                     if (activeCategory === 'Breakfast') return (meal.carbohydrates_total_g || 0) > 20;
                                     if (activeCategory === 'Lunch') return (meal.fat_total_g || 0) > 10;
