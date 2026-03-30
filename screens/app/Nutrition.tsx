@@ -27,12 +27,14 @@ export default function NutritionScreen() {
     const [caloriesInput, setCaloriesInput] = useState('');
     const [recentFoods, setRecentFoods] = useState<any[]>([]);
 
+    const [aiRecommendation, setAiRecommendation] = useState<string>('');
+    const [loadingAI, setLoadingAI] = useState(false);
+    const [selectedMealType, setSelectedMealType] = useState<string | null>(null);
+
     const estimateCalories = (meal: any) => {
         if (!meal) return 0;
-
         const carbs = meal.carbohydrates_total_g ?? 0;
         const fat = meal.fat_total_g ?? 0;
-
         return Math.round((carbs * 4) + (fat * 9));
     };
 
@@ -139,6 +141,62 @@ export default function NutritionScreen() {
         }
     };
 
+    const getAIRecommendations = async () => {
+        try {
+            if (!selectedMealType) {
+                Alert.alert('Select Meal Type', 'Please choose a category first.');
+                return;
+            }
+
+            setLoadingAI(true);
+
+            const apiKey = Config.OPENAI_API_KEY;
+
+            const foodSummary = recentFoods
+                .map((f) => `${f.name} (${f.calories} kcal)`)
+                .join(', ');
+
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: 'You are a fitness coach. Keep responses clean and structured.'
+                        },
+                        {
+                            role: 'user',
+                            content: `
+                            User food log: ${foodSummary}
+                            Give:
+                            - A ${selectedMealType} meal recommendation
+                            - A matching workout
+                            
+                            Format:
+                            Meal:
+                            Workout:
+                            `
+                        }
+                    ],
+                }),
+            });
+
+            const data = await response.json();
+            const text = data?.choices?.[0]?.message?.content || 'No response';
+
+            setAiRecommendation(text);
+        } catch (error) {
+            console.log(error);
+        } finally {
+            setLoadingAI(false);
+        }
+    };
+
     return (
         <View style={[
             styles.container,
@@ -153,58 +211,32 @@ export default function NutritionScreen() {
                     Nutrition
                 </Text>
 
-                {/* Featured Meals */}
-                <View style={[
-                    styles.card,
-                    { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }
-                ]}>
-                    <Text style={[
-                        styles.sectionTitle,
-                        { color: darkMode ? '#f8fafc' : '#0f172a' }
-                    ]}>
+                <View style={[styles.card, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
+                    <Text style={[styles.sectionTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
                         Featured Meals
                     </Text>
 
                     {meals.map((meal, index) => (
                         <View key={index}>
-                            <TouchableOpacity
-                                style={styles.item}
-                                onPress={() => setSelectedMeal(meal)}
-                            >
-                                <Text style={[
-                                    styles.itemTitle,
-                                    { color: darkMode ? '#f8fafc' : '#0f172a' }
-                                ]}>
+                            <TouchableOpacity style={styles.item} onPress={() => setSelectedMeal(meal)}>
+                                <Text style={[styles.itemTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
                                     {meal?.name || 'Unknown Food'}
                                 </Text>
 
-                                <Text style={[
-                                    styles.itemSubtitle,
-                                    { color: darkMode ? '#94a3b8' : '#475569' }
-                                ]}>
+                                <Text style={[styles.itemSubtitle, { color: darkMode ? '#94a3b8' : '#475569' }]}>
                                     {estimateCalories(meal)} kcal • {meal?.carbohydrates_total_g ?? 0}g carbs
                                 </Text>
                             </TouchableOpacity>
 
                             {index < meals.length - 1 && (
-                                <View style={[
-                                    styles.divider,
-                                    { backgroundColor: darkMode ? '#334155' : '#cbd5e1' }
-                                ]} />
+                                <View style={[styles.divider, { backgroundColor: darkMode ? '#334155' : '#cbd5e1' }]} />
                             )}
                         </View>
                     ))}
                 </View>
 
-                {/* Meal Categories */}
-                <View style={[
-                    styles.card,
-                    { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }
-                ]}>
-                    <Text style={[
-                        styles.sectionTitle,
-                        { color: darkMode ? '#f8fafc' : '#0f172a' }
-                    ]}>
+                <View style={[styles.card, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
+                    <Text style={[styles.sectionTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
                         Meal Categories
                     </Text>
 
@@ -217,233 +249,191 @@ export default function NutritionScreen() {
                                     key={item}
                                     style={[
                                         styles.categoryBox,
-                                        { backgroundColor: darkMode ? '#0f172a' : '#ffffff' },
-                                        isSelected && {
-                                            borderWidth: 2,
-                                            borderColor: '#22c55e'
-                                        }
+                                        isSelected && { borderWidth: 2, borderColor: '#22c55e' }
                                     ]}
-                                    onPress={() =>
-                                        setActiveCategory(isSelected ? null : item)
-                                    }
+                                    onPress={() => setActiveCategory(isSelected ? null : item)}
                                 >
-                                    <Text style={[
-                                        styles.categoryText,
-                                        { color: darkMode ? '#f8fafc' : '#0f172a' }
-                                    ]}>
-                                        {item}
+                                    <Text style={styles.categoryText}>{item}</Text>
+                                </TouchableOpacity>
+                            );
+                        })}
+                    </View>
+                </View>
+
+                <View style={[styles.card, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
+                    <Text style={[styles.sectionTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
+                        Add Recent Food
+                    </Text>
+
+                    <TextInput placeholder="Food name" value={foodInput} onChangeText={setFoodInput} style={styles.input} />
+                    <TextInput placeholder="Calories" value={caloriesInput} onChangeText={setCaloriesInput} style={styles.input} />
+
+                    <Button title="Add Food" onPress={addFood} />
+
+                    {recentFoods.map((food) => (
+                        <Text key={food.id}>{food.name} - {food.calories} kcal</Text>
+                    ))}
+                </View>
+
+                <View style={[styles.card, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
+                    <Text style={[styles.sectionTitle, { color: darkMode ? '#22c55e' : '#16a34a' }]}>
+                        Food Recommendations
+                    </Text>
+
+                    <View style={styles.selectorRow}>
+                        {['Breakfast', 'Lunch', 'Dinner', 'Snacks'].map((type) => {
+                            const selected = selectedMealType === type;
+                            return (
+                                <TouchableOpacity
+                                    key={type}
+                                    onPress={() => setSelectedMealType(type)}
+                                    style={[
+                                        styles.selector,
+                                        selected && { backgroundColor: '#22c55e' }
+                                    ]}
+                                >
+                                    <Text style={{
+                                        color: selected ? '#fff' : '#000',
+                                        fontWeight: '600'
+                                    }}>
+                                        {type}
                                     </Text>
                                 </TouchableOpacity>
                             );
                         })}
                     </View>
 
-                    {/* CATEGORY RESULTS */}
-                    {activeCategory && (
-                        <View style={{ marginTop: 10 }}>
-                            <Text style={{
-                                color: darkMode ? '#f8fafc' : '#0f172a',
-                                fontWeight: '600',
-                                marginBottom: 8
-                            }}>
-                                {activeCategory} Options
-                            </Text>
-
-                            {meals
-                                .filter((meal) => meal)
-                                .filter((meal) => {
-                                    if (activeCategory === 'Breakfast') return (meal.carbohydrates_total_g || 0) > 20;
-                                    if (activeCategory === 'Lunch') return (meal.fat_total_g || 0) > 10;
-                                    if (activeCategory === 'Dinner') return (meal.fat_total_g || 0) > 15;
-                                    if (activeCategory === 'Snacks') return (meal.sugar_g || 0) > 8;
-                                    if (activeCategory === 'Vegan') return (meal.name?.toLowerCase().includes('broccoli') || meal.name?.toLowerCase().includes('rice'));
-                                    if (activeCategory === 'High-Protein') return (meal.fat_total_g || 0) > 10;
-                                    return true;
-                                })
-                                .map((meal, idx) => (
-                                    <Text
-                                        key={idx}
-                                        style={{
-                                            color: darkMode ? '#94a3b8' : '#475569',
-                                            marginBottom: 4
-                                        }}
-                                    >
-                                        • {meal?.name || 'Unknown'} - {estimateCalories(meal)} kcal
-                                    </Text>
-                                ))}
-                        </View>
-                    )}
-                </View>
-
-                {/* Add Food */}
-                <View style={[
-                    styles.card,
-                    { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }
-                ]}>
-                    <Text style={[
-                        styles.sectionTitle,
-                        { color: darkMode ? '#f8fafc' : '#0f172a' }
-                    ]}>
-                        Add Recent Food
-                    </Text>
-
-                    <TextInput
-                        placeholder="Food name"
-                        placeholderTextColor={darkMode ? '#64748b' : '#94a3b8'}
-                        value={foodInput}
-                        onChangeText={setFoodInput}
-                        style={[
-                            styles.input,
-                            {
-                                color: darkMode ? '#f8fafc' : '#0f172a',
-                                borderColor: darkMode ? '#334155' : '#cbd5e1'
-                            }
-                        ]}
-                    />
-
-                    <TextInput
-                        placeholder="Calories"
-                        placeholderTextColor={darkMode ? '#64748b' : '#94a3b8'}
-                        value={caloriesInput}
-                        onChangeText={setCaloriesInput}
-                        keyboardType="numeric"
-                        style={[
-                            styles.input,
-                            {
-                                color: darkMode ? '#f8fafc' : '#0f172a',
-                                borderColor: darkMode ? '#334155' : '#cbd5e1'
-                            }
-                        ]}
-                    />
-
-                    <Button title="Add Food" onPress={addFood} />
-
-                    {recentFoods.map((food) => (
-                        <Text key={food.id} style={{
-                            color: darkMode ? '#94a3b8' : '#475569',
-                            marginTop: 6
-                        }}>
-                            {food.name} - {food.calories} kcal
+                    <TouchableOpacity
+                        style={styles.aiButton}
+                        onPress={getAIRecommendations}
+                    >
+                        <Text style={{ color: '#fff', fontWeight: '700' }}>
+                            {loadingAI ? 'Generating...' : 'Get AI Recommendations'}
                         </Text>
-                    ))}
+                    </TouchableOpacity>
+
+                    {aiRecommendation ? (
+                        <View style={styles.aiOutput}>
+                            <Text style={styles.aiTitle}>Your Plan</Text>
+                            <Text style={styles.aiText}>{aiRecommendation}</Text>
+                        </View>
+                    ) : null}
                 </View>
+
             </ScrollView>
 
             <BottomFooter activeTab="Home" />
-
-            {/* Modal */}
-            <Modal visible={!!selectedMeal} transparent animationType="slide">
-                <View style={styles.modalBackground}>
-                    <View style={[
-                        styles.modalContainer,
-                        { backgroundColor: darkMode ? '#1e293b' : '#ffffff' }
-                    ]}>
-                        <Text style={[
-                            styles.modalTitle,
-                            { color: darkMode ? '#22c55e' : '#16a34a' }
-                        ]}>
-                            {selectedMeal?.name || 'Unknown'}
-                        </Text>
-
-                        <Text>Estimated Calories: {estimateCalories(selectedMeal)} kcal</Text>
-                        <Text>Carbs: {selectedMeal?.carbohydrates_total_g ?? 0}g</Text>
-                        <Text>Fat: {selectedMeal?.fat_total_g ?? 0}g</Text>
-                        <Text>Fiber: {selectedMeal?.fiber_g ?? 0}g</Text>
-                        <Text>Sugar: {selectedMeal?.sugar_g ?? 0}g</Text>
-
-                        <Button title="Close" onPress={() => setSelectedMeal(null)} />
-                    </View>
-                </View>
-            </Modal>
         </View>
     );
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
+    container: {
+        flex: 1
+    },
 
     scrollContent: {
-        paddingHorizontal: 20,
-        paddingTop: 20,
-        paddingBottom: 80,
+        padding: 20
     },
 
     headerText: {
         fontSize: 26,
         fontWeight: '700',
-        marginBottom: 10,
+        marginBottom: 10
     },
 
     card: {
         borderRadius: 18,
         padding: 18,
-        marginTop: 10,
-        marginBottom: 20,
+        marginBottom: 20
     },
 
     sectionTitle: {
         fontSize: 18,
         fontWeight: '600',
-        marginBottom: 15,
+        marginBottom: 10
     },
 
-    item: { paddingVertical: 10 },
+    item: {
+        paddingVertical: 10
+    },
 
     itemTitle: {
         fontSize: 15,
-        fontWeight: '600',
-        marginBottom: 4,
+        fontWeight: '600'
     },
 
-    itemSubtitle: { fontSize: 13 },
+    itemSubtitle: {
+        fontSize: 13
+    },
 
     divider: {
         height: 1,
-        marginVertical: 10,
+        marginVertical: 10
     },
 
     grid: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        justifyContent: 'space-between',
+        flexWrap: 'wrap'
     },
 
     categoryBox: {
-        width: '48%',
-        paddingVertical: 18,
-        borderRadius: 14,
-        alignItems: 'center',
-        marginBottom: 12,
+        padding: 10,
+        margin: 5,
+        borderRadius: 10,
+        backgroundColor: '#cbd5e1'
     },
 
     categoryText: {
-        fontWeight: '600',
-        fontSize: 14,
+        fontWeight: '600'
     },
 
     input: {
         borderWidth: 1,
-        borderRadius: 12,
+        borderRadius: 10,
         padding: 10,
-        marginBottom: 10,
+        marginBottom: 10
     },
 
-    modalBackground: {
-        flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.6)',
-        justifyContent: 'center',
+    selectorRow: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        marginBottom: 10
+    },
+
+    selector: {
+        padding: 10,
+        borderRadius: 10,
+        backgroundColor: '#cbd5e1',
+        marginRight: 8,
+        marginBottom: 8
+    },
+
+    aiButton: {
+        backgroundColor: '#22c55e',
+        padding: 12,
+        borderRadius: 10,
         alignItems: 'center',
+        marginTop: 5
     },
 
-    modalContainer: {
-        padding: 20,
-        borderRadius: 20,
-        width: '85%',
+    aiOutput: {
+        marginTop: 15,
+        padding: 15,
+        borderRadius: 12,
+        backgroundColor: '#0f172a'
     },
 
-    modalTitle: {
-        fontSize: 20,
+    aiTitle: {
+        color: '#22c55e',
+        fontSize: 16,
         fontWeight: '700',
-        marginBottom: 12,
+        marginBottom: 8
     },
+
+    aiText: {
+        color: '#f8fafc',
+        fontSize: 14,
+        lineHeight: 20
+    }
 });

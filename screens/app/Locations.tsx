@@ -261,7 +261,9 @@ export default function LocationsScreen() {
 }
 
 const styles = StyleSheet.create({
-    container: { flex: 1 },
+    container: {
+        flex: 1
+    },
 
     scrollContent: {
         padding: 20,
