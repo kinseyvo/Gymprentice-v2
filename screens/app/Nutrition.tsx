@@ -6,8 +6,6 @@ import {
     ScrollView,
     TouchableOpacity,
     TextInput,
-    Modal,
-    Button,
     Alert,
 } from 'react-native';
 import BottomFooter from '../../navigation/BottomFooter';
@@ -20,69 +18,99 @@ export default function NutritionScreen() {
     const { darkMode } = useTheme();
 
     const [meals, setMeals] = useState<any[]>([]);
-    const [selectedMeal, setSelectedMeal] = useState<any>(null);
     const [activeCategory, setActiveCategory] = useState<string | null>(null);
+    const [categoryMeals, setCategoryMeals] = useState<any[]>([]);
+    const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
 
     const [foodInput, setFoodInput] = useState('');
     const [caloriesInput, setCaloriesInput] = useState('');
     const [recentFoods, setRecentFoods] = useState<any[]>([]);
 
-    const [aiRecommendation, setAiRecommendation] = useState<string>('');
+    const [aiRecommendation, setAiRecommendation] = useState('');
     const [loadingAI, setLoadingAI] = useState(false);
     const [selectedMealType, setSelectedMealType] = useState<string | null>(null);
 
     const estimateCalories = (meal: any) => {
-        if (!meal) return 0;
-        const carbs = meal.carbohydrates_total_g ?? 0;
-        const fat = meal.fat_total_g ?? 0;
-        return Math.round((carbs * 4) + (fat * 9));
+        const carbs = meal?.carbohydrates_total_g ?? 0;
+        const fat = meal?.fat_total_g ?? 0;
+        return Math.round(carbs * 4 + fat * 9);
     };
 
     const fetchMeals = async () => {
         try {
             const apiKey = Config.API_NINJAS_KEY;
-            if (!apiKey) throw new Error('Missing API key');
+            if (!apiKey) return;
 
             const foodPool = [
-                '100g chicken breast',
-                '1 cup brown rice',
-                '2 eggs',
-                '100g salmon',
-                '1 avocado',
-                '1 cup oatmeal',
-                '1 banana',
-                '1 cup quinoa',
-                '100g steak',
-                '1 apple',
-                '1 cup greek yogurt',
-                '1 slice whole wheat bread',
-                '1 tbsp peanut butter',
-                '1 cup broccoli',
+                'chicken breast',
+                'rice',
+                'eggs',
+                'salmon',
+                'avocado',
+                'oatmeal'
             ];
 
             const shuffled = foodPool.sort(() => 0.5 - Math.random());
-            const foods = shuffled.slice(0, 6);
+            const foods = shuffled.slice(0, 3);
 
             let results: any[] = [];
 
             for (let food of foods) {
                 const res = await fetch(
-                    `https://api.api-ninjas.com/v1/nutrition?query=${encodeURIComponent(food)}`,
+                    `https://api.api-ninjas.com/v1/nutrition?query=${food}`,
                     {
-                        headers: { 'X-Api-Key': apiKey }
+                        method: 'GET',
+                        headers: {
+                            'X-Api-Key': String(apiKey),
+                        } as any,
                     }
                 );
 
                 const data = await res.json();
-
-                if (data && data.length > 0 && data[0]) {
-                    results.push(data[0]);
-                }
+                if (data?.length > 0) results.push(data[0]);
             }
 
             setMeals(results);
         } catch (err) {
-            console.log('Nutrition API error:', err);
+            console.log(err);
+        }
+    };
+
+    const fetchCategoryMeals = async (category: string) => {
+        try {
+            const apiKey = Config.API_NINJAS_KEY;
+            if (!apiKey) return;
+
+            const map: any = {
+                Breakfast: ['eggs', 'oatmeal', 'yogurt'],
+                Lunch: ['chicken breast', 'rice', 'salad'],
+                Dinner: ['salmon', 'steak', 'quinoa'],
+                Snacks: ['apple', 'banana', 'peanut butter'],
+                Vegan: ['tofu', 'lentils', 'quinoa'],
+                'High-Protein': ['chicken breast', 'eggs', 'protein shake'],
+            };
+
+            let results: any[] = [];
+
+            for (let food of map[category]) {
+                const res = await fetch(
+                    `https://api.api-ninjas.com/v1/nutrition?query=${food}`,
+                    {
+                        method: 'GET',
+                        headers: {
+                            'X-Api-Key': String(apiKey),
+                        } as any,
+                    }
+                );
+
+                const data = await res.json();
+                if (data?.length > 0) results.push(data[0]);
+            }
+
+            setCategoryMeals(results);
+            setExpandedIndex(null);
+        } catch (err) {
+            console.log(err);
         }
     };
 
@@ -113,38 +141,31 @@ export default function NutritionScreen() {
     const addFood = async () => {
         const user = auth().currentUser;
 
-        if (!user) {
-            Alert.alert('Not logged in', 'You must be logged in.');
-            return;
-        }
-
+        if (!user) return Alert.alert('Not logged in');
         if (!foodInput || !caloriesInput) return;
 
         try {
-            const newFood = {
-                name: foodInput,
-                calories: Number(caloriesInput),
-                timestamp: firestore.FieldValue.serverTimestamp(),
-            };
-
             await firestore()
                 .collection('users')
                 .doc(user.uid)
                 .collection('recentFoods')
-                .add(newFood);
+                .add({
+                    name: foodInput,
+                    calories: Number(caloriesInput),
+                    timestamp: firestore.FieldValue.serverTimestamp(),
+                });
 
             setFoodInput('');
             setCaloriesInput('');
-        } catch (error) {
-            console.error('Error saving food:', error);
-            Alert.alert('Error', 'Could not save food.');
+        } catch {
+            Alert.alert('Error saving food');
         }
     };
 
     const getAIRecommendations = async () => {
         try {
-            if (!selectedMealType) {
-                Alert.alert('Select Meal Type', 'Please choose a category first.');
+            if (!selectedMealType && !activeCategory) {
+                Alert.alert('Pick a category');
                 return;
             }
 
@@ -166,157 +187,131 @@ export default function NutritionScreen() {
                     model: 'gpt-4o-mini',
                     messages: [
                         {
-                            role: 'system',
-                            content: 'You are a fitness coach. Keep responses clean and structured.'
-                        },
-                        {
                             role: 'user',
                             content: `
-                            User food log: ${foodSummary}
-                            Give:
-                            - A ${selectedMealType} meal recommendation
-                            - A matching workout
-                            
-                            Format:
-                            Meal:
-                            Workout:
-                            `
-                        }
+User food log: ${foodSummary}
+
+Give:
+- A ${selectedMealType || activeCategory} meal
+- A workout
+Keep it clean.
+`,
+                        },
                     ],
                 }),
             });
 
             const data = await response.json();
-            const text = data?.choices?.[0]?.message?.content || 'No response';
-
-            setAiRecommendation(text);
-        } catch (error) {
-            console.log(error);
+            setAiRecommendation(data?.choices?.[0]?.message?.content || '');
+        } catch (err) {
+            console.log(err);
         } finally {
             setLoadingAI(false);
         }
     };
 
     return (
-        <View style={[
-            styles.container,
-            { backgroundColor: darkMode ? '#0f172a' : '#ffffff' }
-        ]}>
+        <View style={[styles.container, { backgroundColor: darkMode ? '#0f172a' : '#fff' }]}>
             <ScrollView contentContainerStyle={styles.scrollContent}>
 
-                <Text style={[
-                    styles.headerText,
-                    { color: darkMode ? '#22c55e' : '#16a34a' }
-                ]}>
-                    Nutrition
-                </Text>
+                <Text style={styles.header}>Nutrition</Text>
 
-                <View style={[styles.card, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
-                    <Text style={[styles.sectionTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
-                        Featured Meals
-                    </Text>
-
-                    {meals.map((meal, index) => (
-                        <View key={index}>
-                            <TouchableOpacity style={styles.item} onPress={() => setSelectedMeal(meal)}>
-                                <Text style={[styles.itemTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
-                                    {meal?.name || 'Unknown Food'}
-                                </Text>
-
-                                <Text style={[styles.itemSubtitle, { color: darkMode ? '#94a3b8' : '#475569' }]}>
-                                    {estimateCalories(meal)} kcal • {meal?.carbohydrates_total_g ?? 0}g carbs
-                                </Text>
-                            </TouchableOpacity>
-
-                            {index < meals.length - 1 && (
-                                <View style={[styles.divider, { backgroundColor: darkMode ? '#334155' : '#cbd5e1' }]} />
-                            )}
+                <View style={styles.card}>
+                    <Text style={styles.title}>Featured Meals</Text>
+                    {meals.map((meal, i) => (
+                        <View key={i} style={styles.item}>
+                            <Text style={styles.itemTitle}>{meal.name}</Text>
+                            <Text style={styles.itemSub}>{estimateCalories(meal)} kcal</Text>
                         </View>
                     ))}
                 </View>
 
-                <View style={[styles.card, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
-                    <Text style={[styles.sectionTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
-                        Meal Categories
-                    </Text>
+                <View style={styles.card}>
+                    <Text style={styles.title}>Meal Categories</Text>
 
                     <View style={styles.grid}>
-                        {['Breakfast', 'Lunch', 'Dinner', 'Snacks', 'Vegan', 'High-Protein'].map((item) => {
-                            const isSelected = activeCategory === item;
-
-                            return (
-                                <TouchableOpacity
-                                    key={item}
-                                    style={[
-                                        styles.categoryBox,
-                                        isSelected && { borderWidth: 2, borderColor: '#22c55e' }
-                                    ]}
-                                    onPress={() => setActiveCategory(isSelected ? null : item)}
-                                >
-                                    <Text style={styles.categoryText}>{item}</Text>
-                                </TouchableOpacity>
-                            );
-                        })}
+                        {['Breakfast', 'Lunch', 'Dinner', 'Snacks', 'Vegan', 'High-Protein'].map((item) => (
+                            <TouchableOpacity
+                                key={item}
+                                style={[
+                                    styles.category,
+                                    activeCategory === item && styles.activeCategory
+                                ]}
+                                onPress={() => {
+                                    setActiveCategory(item);
+                                    fetchCategoryMeals(item);
+                                }}
+                            >
+                                <Text style={styles.categoryText}>{item}</Text>
+                            </TouchableOpacity>
+                        ))}
                     </View>
+
+                    {categoryMeals.map((meal, i) => {
+                        const expanded = expandedIndex === i;
+
+                        return (
+                            <TouchableOpacity
+                                key={i}
+                                style={styles.mealCard}
+                                onPress={() => setExpandedIndex(expanded ? null : i)}
+                            >
+                                <Text style={styles.mealTitle}>🍽️ {meal.name}</Text>
+                                <Text style={styles.itemSub}>{estimateCalories(meal)} kcal</Text>
+
+                                {expanded && (
+                                    <View style={{ marginTop: 8 }}>
+                                        <Text style={styles.macro}>Protein: {meal.protein_g}g</Text>
+                                        <Text style={styles.macro}>Carbs: {meal.carbohydrates_total_g}g</Text>
+                                        <Text style={styles.macro}>Fat: {meal.fat_total_g}g</Text>
+                                    </View>
+                                )}
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
 
-                <View style={[styles.card, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
-                    <Text style={[styles.sectionTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
-                        Add Recent Food
-                    </Text>
+                <View style={styles.card}>
+                    <Text style={styles.title}>Add Recent Food</Text>
 
-                    <TextInput placeholder="Food name" value={foodInput} onChangeText={setFoodInput} style={styles.input} />
-                    <TextInput placeholder="Calories" value={caloriesInput} onChangeText={setCaloriesInput} style={styles.input} />
+                    <TextInput
+                        placeholder="Food name"
+                        value={foodInput}
+                        onChangeText={setFoodInput}
+                        style={styles.input}
+                    />
 
-                    <Button title="Add Food" onPress={addFood} />
+                    <TextInput
+                        placeholder="Calories"
+                        value={caloriesInput}
+                        onChangeText={setCaloriesInput}
+                        style={styles.input}
+                        keyboardType="numeric"
+                    />
+
+                    <TouchableOpacity style={styles.pillButton} onPress={addFood}>
+                        <Text style={styles.pillButtonText}>Add Food</Text>
+                    </TouchableOpacity>
 
                     {recentFoods.map((food) => (
-                        <Text key={food.id}>{food.name} - {food.calories} kcal</Text>
+                        <View key={food.id} style={styles.foodCard}>
+                            <Text style={styles.foodName}>{food.name}</Text>
+                            <Text style={styles.foodCal}>{food.calories} kcal</Text>
+                        </View>
                     ))}
                 </View>
 
-                <View style={[styles.card, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
-                    <Text style={[styles.sectionTitle, { color: darkMode ? '#22c55e' : '#16a34a' }]}>
-                        Food Recommendations
-                    </Text>
+                <View style={styles.card}>
+                    <Text style={styles.title}>AI Recommendations</Text>
 
-                    <View style={styles.selectorRow}>
-                        {['Breakfast', 'Lunch', 'Dinner', 'Snacks'].map((type) => {
-                            const selected = selectedMealType === type;
-                            return (
-                                <TouchableOpacity
-                                    key={type}
-                                    onPress={() => setSelectedMealType(type)}
-                                    style={[
-                                        styles.selector,
-                                        selected && { backgroundColor: '#22c55e' }
-                                    ]}
-                                >
-                                    <Text style={{
-                                        color: selected ? '#fff' : '#000',
-                                        fontWeight: '600'
-                                    }}>
-                                        {type}
-                                    </Text>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </View>
-
-                    <TouchableOpacity
-                        style={styles.aiButton}
-                        onPress={getAIRecommendations}
-                    >
-                        <Text style={{ color: '#fff', fontWeight: '700' }}>
-                            {loadingAI ? 'Generating...' : 'Get AI Recommendations'}
+                    <TouchableOpacity style={styles.pillButton} onPress={getAIRecommendations}>
+                        <Text style={styles.pillButtonText}>
+                            {loadingAI ? 'Generating...' : 'Get AI Plan'}
                         </Text>
                     </TouchableOpacity>
 
                     {aiRecommendation ? (
-                        <View style={styles.aiOutput}>
-                            <Text style={styles.aiTitle}>Your Plan</Text>
-                            <Text style={styles.aiText}>{aiRecommendation}</Text>
-                        </View>
+                        <Text style={styles.aiText}>{aiRecommendation}</Text>
                     ) : null}
                 </View>
 
@@ -336,104 +331,121 @@ const styles = StyleSheet.create({
         padding: 20
     },
 
-    headerText: {
+    header: {
         fontSize: 26,
         fontWeight: '700',
+        color: '#22c55e',
         marginBottom: 10
     },
 
     card: {
-        borderRadius: 18,
-        padding: 18,
-        marginBottom: 20
+        backgroundColor: '#1e293b',
+        padding: 16,
+        borderRadius: 16,
+        marginBottom: 20,
     },
 
-    sectionTitle: {
+    title: {
+        color: '#fff',
         fontSize: 18,
         fontWeight: '600',
         marginBottom: 10
     },
 
     item: {
-        paddingVertical: 10
+        marginBottom: 10
     },
 
     itemTitle: {
-        fontSize: 15,
-        fontWeight: '600'
+        color: '#fff',
+        fontWeight: '600',
     },
 
-    itemSubtitle: {
-        fontSize: 13
-    },
-
-    divider: {
-        height: 1,
-        marginVertical: 10
+    itemSub: {
+        color: '#94a3b8',
     },
 
     grid: {
         flexDirection: 'row',
-        flexWrap: 'wrap'
+        flexWrap: 'wrap',
+        justifyContent: 'space-between',
     },
 
-    categoryBox: {
+    category: {
+        width: '30%',
+        backgroundColor: '#334155',
         padding: 10,
-        margin: 5,
         borderRadius: 10,
-        backgroundColor: '#cbd5e1'
+        marginBottom: 10,
+        alignItems: 'center',
+    },
+
+    activeCategory: {
+        borderWidth: 2,
+        borderColor: '#22c55e',
     },
 
     categoryText: {
-        fontWeight: '600'
+        color: '#fff',
+        fontSize: 12,
+    },
+
+    mealCard: {
+        backgroundColor: '#0f172a',
+        padding: 12,
+        borderRadius: 10,
+        marginTop: 10,
+    },
+
+    mealTitle: {
+        color: '#fff',
+        fontWeight: '700',
+    },
+
+    macro: {
+        color: '#94a3b8',
+        fontSize: 12
     },
 
     input: {
-        borderWidth: 1,
-        borderRadius: 10,
+        backgroundColor: '#fff',
         padding: 10,
+        borderRadius: 999,
         marginBottom: 10
     },
 
-    selectorRow: {
-        flexDirection: 'row',
-        flexWrap: 'wrap',
-        marginBottom: 10
-    },
-
-    selector: {
-        padding: 10,
-        borderRadius: 10,
-        backgroundColor: '#cbd5e1',
-        marginRight: 8,
-        marginBottom: 8
-    },
-
-    aiButton: {
+    pillButton: {
         backgroundColor: '#22c55e',
-        padding: 12,
-        borderRadius: 10,
+        paddingVertical: 12,
+        borderRadius: 999,
         alignItems: 'center',
-        marginTop: 5
+        marginTop: 5,
+        marginBottom: 10
     },
 
-    aiOutput: {
-        marginTop: 15,
-        padding: 15,
-        borderRadius: 12,
-        backgroundColor: '#0f172a'
+    pillButtonText: {
+        color: '#000',
+        fontWeight: '700'
     },
 
-    aiTitle: {
-        color: '#22c55e',
-        fontSize: 16,
-        fontWeight: '700',
-        marginBottom: 8
+    foodCard: {
+        backgroundColor: '#0f172a',
+        padding: 10,
+        borderRadius: 10,
+        marginTop: 10
+    },
+
+    foodName: {
+        color: '#fff',
+        fontWeight: '600'
+    },
+
+    foodCal: {
+        color: '#94a3b8'
     },
 
     aiText: {
-        color: '#f8fafc',
-        fontSize: 14,
-        lineHeight: 20
+        color: '#fff',
+        marginTop: 10
     }
 });

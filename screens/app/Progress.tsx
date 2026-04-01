@@ -4,7 +4,7 @@ import { LineChart, BarChart } from 'react-native-chart-kit';
 import BottomFooter from '../../navigation/BottomFooter';
 import { useTheme } from '../../src/context/ThemeContext';
 
-const screenWidth = Dimensions.get('window').width - 40;
+const screenWidth = Dimensions.get('window').width - 60;
 
 export default function ProgressScreen() {
 
@@ -38,33 +38,37 @@ export default function ProgressScreen() {
                         Workout Stats
                     </Text>
 
-                    <LineChart
-                        data={{
-                            labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                            datasets: [{
-                                data: [30, 45, 28, 80, 99, 43, 50],
+                    <View style={styles.chartWrapper}>
+                        <LineChart
+                            data={{
+                                labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                                datasets: [{
+                                    data: [30, 45, 28, 80, 99, 43, 50],
+                                    color: (opacity = 1) => `rgba(34,197,94, ${opacity})`,
+                                }],
+                            }}
+                            width={screenWidth}
+                            height={170}
+                            yAxisSuffix=""
+                            withInnerLines={false}
+                            horizontalLabelRotation={0}
+                            chartConfig={{
+                                backgroundColor: chartBackground,
+                                backgroundGradientFrom: chartBackground,
+                                backgroundGradientTo: chartBackground,
+                                decimalPlaces: 0,
                                 color: (opacity = 1) => `rgba(34,197,94, ${opacity})`,
-                            }],
-                        }}
-                        width={screenWidth}
-                        height={160}
-                        yAxisSuffix=""
-                        chartConfig={{
-                            backgroundColor: chartBackground,
-                            backgroundGradientFrom: chartBackground,
-                            backgroundGradientTo: chartBackground,
-                            decimalPlaces: 0,
-                            color: (opacity = 1) => `rgba(34,197,94, ${opacity})`,
-                            labelColor: () => labelColor,
-                            style: { borderRadius: 16 },
-                            propsForDots: {
-                                r: '5',
-                                strokeWidth: '2',
-                                stroke: '#22c55e',
-                            },
-                        }}
-                        style={{ borderRadius: 16 }}
-                    />
+                                labelColor: () => labelColor,
+                                style: { borderRadius: 16 },
+                                propsForDots: {
+                                    r: '4',
+                                    strokeWidth: '2',
+                                    stroke: '#22c55e',
+                                },
+                            }}
+                            style={styles.chart}
+                        />
+                    </View>
                 </View>
 
                 {/* Nutrition Stats */}
@@ -79,27 +83,31 @@ export default function ProgressScreen() {
                         Nutrition Stats
                     </Text>
 
-                    <BarChart
-                        data={{
-                            labels: ['Protein', 'Carbs', 'Fats'],
-                            datasets: [{ data: [120, 200, 70] }],
-                        }}
-                        width={screenWidth}
-                        height={160}
-                        fromZero
-                        yAxisLabel=""
-                        yAxisSuffix=""
-                        chartConfig={{
-                            backgroundColor: chartBackground,
-                            backgroundGradientFrom: chartBackground,
-                            backgroundGradientTo: chartBackground,
-                            decimalPlaces: 0,
-                            color: (opacity = 1) => `rgba(34,197,94, ${opacity})`,
-                            labelColor: () => labelColor,
-                            style: { borderRadius: 16 },
-                        }}
-                        style={{ borderRadius: 16 }}
-                    />
+                    <View style={styles.chartWrapper}>
+                        <BarChart
+                            data={{
+                                labels: ['Protein', 'Carbs', 'Fats'],
+                                datasets: [{ data: [120, 200, 70] }],
+                            }}
+                            width={screenWidth}
+                            height={170}
+                            fromZero
+                            showValuesOnTopOfBars
+                            yAxisLabel=""
+                            yAxisSuffix=""
+                            chartConfig={{
+                                backgroundColor: chartBackground,
+                                backgroundGradientFrom: chartBackground,
+                                backgroundGradientTo: chartBackground,
+                                decimalPlaces: 0,
+                                color: (opacity = 1) => `rgba(34,197,94, ${opacity})`,
+                                labelColor: () => labelColor,
+                                style: { borderRadius: 16 },
+                                barPercentage: 0.6,
+                            }}
+                            style={styles.chart}
+                        />
+                    </View>
                 </View>
 
                 {/* Weekly Summary */}
@@ -145,13 +153,11 @@ const styles = StyleSheet.create({
     headerText: {
         fontSize: 26,
         fontWeight: '700',
-        color: '#22c55e',
         marginBottom: 20,
         textAlign: 'left',
     },
 
     card: {
-        backgroundColor: '#1e293b',
         borderRadius: 18,
         padding: 18,
         marginBottom: 20,
@@ -160,13 +166,24 @@ const styles = StyleSheet.create({
     sectionTitle: {
         fontSize: 18,
         fontWeight: '600',
-        color: '#f8fafc',
         marginBottom: 12,
+    },
+
+    chartWrapper: {
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
+        borderRadius: 16,
+    },
+
+    chart: {
+        borderRadius: 16,
+        marginLeft: -10,   // helps center alignment
+        marginRight: -10,  // prevents right-side overflow
     },
 
     placeholderText: {
         fontSize: 14,
-        color: '#94a3b8',
         lineHeight: 20,
     },
 });
