@@ -177,7 +177,6 @@ export default function HomeScreen({ navigation }: any) {
                     )}
                 </ScrollView>
 
-                {/* ===== TODAY STATS + ORIGINAL GRAPH ===== */}
                 <View style={styles.sectionHeader}>
                     <Text style={[styles.sectionTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
                         Today’s Stats
@@ -202,7 +201,6 @@ export default function HomeScreen({ navigation }: any) {
                         </View>
                     </View>
 
-                    {/* ✅ ORIGINAL BAR GRAPH (UNCHANGED) */}
                     <View style={styles.graphContainer}>
                         <View style={[styles.graphBar, { height: 30, backgroundColor: darkMode ? '#22c55e' : '#16a34a' }]} />
                         <View style={[styles.graphBar, { height: 45, backgroundColor: darkMode ? '#22c55e' : '#16a34a' }]} />
