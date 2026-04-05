@@ -4,7 +4,6 @@ import {
     View,
     ScrollView,
     TouchableOpacity,
-    Image,
     ActivityIndicator,
     Modal,
 } from 'react-native';
@@ -13,16 +12,17 @@ import styles from '../../styles/HomeScreen';
 import BottomFooter from '../../navigation/BottomFooter';
 import { useTheme } from '../../src/context/ThemeContext';
 import Config from 'react-native-config';
+import firestore from '@react-native-firebase/firestore';
+import auth from '@react-native-firebase/auth';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 
 export default function HomeScreen({ navigation }: any) {
     const safeAreaInsets = useSafeAreaInsets();
     const { darkMode } = useTheme();
 
-    const userName = 'Batman';
-
+    const [userName, setUserName] = useState('Batman');
     const [latestWorkouts, setLatestWorkouts] = useState<any[]>([]);
     const [loadingWorkouts, setLoadingWorkouts] = useState(false);
-
     const [selectedWorkout, setSelectedWorkout] = useState<any | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
 
@@ -34,10 +34,28 @@ export default function HomeScreen({ navigation }: any) {
             'Perfect form > heavier weight.',
             'Rest days are part of training.',
         ];
-
         const dayIndex = new Date().getDate() % tips.length;
         return tips[dayIndex];
     }, []);
+
+    const fetchUserName = async () => {
+        try {
+            const user = auth().currentUser;
+            if (!user) return;
+
+            const userDoc = await firestore()
+                .collection('users')
+                .doc(user.uid)
+                .get();
+
+            if (userDoc.exists()) {
+                const data = userDoc.data();
+                setUserName(data?.name || 'User');
+            }
+        } catch (error) {
+            console.error('Error fetching user name:', error);
+        }
+    };
 
     const fetchLatestWorkouts = async () => {
         try {
@@ -67,7 +85,6 @@ export default function HomeScreen({ navigation }: any) {
             } else {
                 setLatestWorkouts([]);
             }
-
         } catch (error) {
             console.error('Error fetching latest workouts:', error);
             setLatestWorkouts([]);
@@ -78,7 +95,22 @@ export default function HomeScreen({ navigation }: any) {
 
     useEffect(() => {
         fetchLatestWorkouts();
+        fetchUserName();
     }, []);
+
+    const getWorkoutIcon = (muscle: string) => {
+        const m = muscle?.toLowerCase();
+
+        if (m?.includes('chest')) return 'arm-flex';
+        if (m?.includes('back')) return 'human-handsdown';
+        if (m?.includes('legs') || m?.includes('quadriceps') || m?.includes('hamstrings'))
+            return 'run';
+        if (m?.includes('shoulders')) return 'arm-flex-outline';
+        if (m?.includes('biceps') || m?.includes('triceps')) return 'arm-flex';
+        if (m?.includes('abs')) return 'six-pack';
+
+        return 'dumbbell';
+    };
 
     return (
         <View
@@ -105,7 +137,6 @@ export default function HomeScreen({ navigation }: any) {
                     </Text>
                 </View>
 
-                {/* Quick Actions */}
                 <View style={styles.quickGrid}>
                     {[
                         'Workouts',
@@ -130,7 +161,6 @@ export default function HomeScreen({ navigation }: any) {
                     ))}
                 </View>
 
-                {/* Latest Workouts */}
                 <View style={styles.sectionHeader}>
                     <Text style={[styles.sectionTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
                         Latest Workouts
@@ -144,26 +174,30 @@ export default function HomeScreen({ navigation }: any) {
                 </View>
 
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                    {loadingWorkouts ? (
+                    {loadingWorkouts && (
                         <ActivityIndicator style={{ marginTop: 20 }} />
-                    ) : (
+                    )}
+
+                    {!loadingWorkouts &&
                         latestWorkouts.map((workout, index) => (
                             <TouchableOpacity
-                                key={index}
+                                key={workout.name + index}
                                 style={[
                                     styles.workoutCard,
                                     { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' },
                                 ]}
-                                activeOpacity={0.85}
                                 onPress={() => {
                                     setSelectedWorkout(workout);
                                     setModalVisible(true);
                                 }}
                             >
-                                <Image
-                                    source={{ uri: 'https://via.placeholder.com/140' }}
-                                    style={styles.workoutImage}
-                                />
+                                <View style={[styles.workoutImage, { justifyContent: 'center', alignItems: 'center' }]}>
+                                    <MaterialCommunityIcons
+                                        name={getWorkoutIcon(workout.muscle)}
+                                        size={40}
+                                        color={darkMode ? '#22c55e' : '#16a34a'}
+                                    />
+                                </View>
 
                                 <Text style={[styles.workoutTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
                                     {workout.name}
@@ -173,8 +207,7 @@ export default function HomeScreen({ navigation }: any) {
                                     {workout.muscle || 'Workout'}
                                 </Text>
                             </TouchableOpacity>
-                        ))
-                    )}
+                        ))}
                 </ScrollView>
 
                 <View style={styles.sectionHeader}>
@@ -186,18 +219,18 @@ export default function HomeScreen({ navigation }: any) {
                 <View style={[styles.statsCard, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
                     <View style={styles.statsRow}>
                         <View style={styles.statBlock}>
-                            <Text style={[styles.statNumber, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>1,240</Text>
-                            <Text style={[styles.statLabel, { color: darkMode ? '#94a3b8' : '#475569' }]}>Calories</Text>
+                            <Text style={styles.statNumber}>1,240</Text>
+                            <Text style={styles.statLabel}>Calories</Text>
                         </View>
 
                         <View style={styles.statBlock}>
-                            <Text style={[styles.statNumber, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>45m</Text>
-                            <Text style={[styles.statLabel, { color: darkMode ? '#94a3b8' : '#475569' }]}>Workout</Text>
+                            <Text style={styles.statNumber}>45m</Text>
+                            <Text style={styles.statLabel}>Workout</Text>
                         </View>
 
                         <View style={styles.statBlock}>
-                            <Text style={[styles.statNumber, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>7,820</Text>
-                            <Text style={[styles.statLabel, { color: darkMode ? '#94a3b8' : '#475569' }]}>Steps</Text>
+                            <Text style={styles.statNumber}>7,820</Text>
+                            <Text style={styles.statLabel}>Steps</Text>
                         </View>
                     </View>
 
