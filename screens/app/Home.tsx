@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Text,
     View,
@@ -26,17 +26,43 @@ export default function HomeScreen({ navigation }: any) {
     const [selectedWorkout, setSelectedWorkout] = useState<any | null>(null);
     const [modalVisible, setModalVisible] = useState(false);
 
-    const gymTipOfTheDay = useMemo(() => {
-        const tips = [
-            'Consistency beats intensity. Show up today.',
-            'Progress is built one rep at a time.',
-            'Hydration matters more than you think.',
-            'Perfect form > heavier weight.',
-            'Rest days are part of training.',
-        ];
-        const dayIndex = new Date().getDate() % tips.length;
-        return tips[dayIndex];
-    }, []);
+    const [gymTip, setGymTip] = useState('');
+    const [loadingTip, setLoadingTip] = useState(false);
+
+    const [graphData, setGraphData] = useState<number[]>([]);
+
+    const fetchTodayCalories = async () => {
+        try {
+            const user = auth().currentUser;
+            if (!user) return;
+
+            const today = new Date().toISOString().split('T')[0];
+
+            const snapshot = await firestore()
+                .collection('users')
+                .doc(user.uid)
+                .collection('schedule')
+                .where('date', '==', today)
+                .get();
+
+            let caloriesArray: number[] = [];
+
+            snapshot.forEach(doc => {
+                const data = doc.data();
+                if (data?.calories) {
+                    caloriesArray.push(data.calories);
+                }
+            });
+
+            if (caloriesArray.length === 0) {
+                caloriesArray = [30, 45, 20, 69, 25, 50, 25];
+            }
+
+            setGraphData(caloriesArray);
+        } catch (error) {
+            console.error('Error fetching calories:', error);
+        }
+    };
 
     const fetchUserName = async () => {
         try {
@@ -54,6 +80,69 @@ export default function HomeScreen({ navigation }: any) {
             }
         } catch (error) {
             console.error('Error fetching user name:', error);
+        }
+    };
+
+    const fetchGymTip = async () => {
+        try {
+            const user = auth().currentUser;
+            if (!user) return;
+
+            const today = new Date().toISOString().split('T')[0];
+
+            const tipRef = firestore()
+                .collection('users')
+                .doc(user.uid)
+                .collection('dailyTip')
+                .doc('tip');
+
+            const doc = await tipRef.get();
+
+            if (doc.exists()) {
+                const data = doc.data();
+                if (data?.date === today && data?.tip) {
+                    setGymTip(data.tip);
+                    return;
+                }
+            }
+
+            setLoadingTip(true);
+
+            const apiKey = Config.OPENAI_API_KEY;
+
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`,
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini',
+                    messages: [
+                        {
+                            role: 'user',
+                            content: `Give me 1 short gym tip (1 sentence). No formatting.`,
+                        },
+                    ],
+                }),
+            });
+
+            const data = await response.json();
+            const tip = data?.choices?.[0]?.message?.content?.trim();
+
+            if (tip) {
+                setGymTip(tip);
+
+                await tipRef.set({
+                    tip,
+                    date: today,
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching gym tip:', error);
+            setGymTip('Stay consistent and focus on proper form.');
+        } finally {
+            setLoadingTip(false);
         }
     };
 
@@ -96,6 +185,8 @@ export default function HomeScreen({ navigation }: any) {
     useEffect(() => {
         fetchLatestWorkouts();
         fetchUserName();
+        fetchGymTip();
+        fetchTodayCalories();
     }, []);
 
     const getWorkoutIcon = (muscle: string) => {
@@ -133,7 +224,7 @@ export default function HomeScreen({ navigation }: any) {
 
                 <View style={[styles.tipCard, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
                     <Text style={[styles.tipText, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
-                        {gymTipOfTheDay}
+                        {loadingTip ? 'Generating tip...' : gymTip}
                     </Text>
                 </View>
 
@@ -165,12 +256,6 @@ export default function HomeScreen({ navigation }: any) {
                     <Text style={[styles.sectionTitle, { color: darkMode ? '#f8fafc' : '#0f172a' }]}>
                         Latest Workouts
                     </Text>
-
-                    <TouchableOpacity onPress={() => navigation.navigate('Workouts')}>
-                        <Text style={[styles.viewAllText, { color: darkMode ? '#22c55e' : '#16a34a' }]}>
-                            View All
-                        </Text>
-                    </TouchableOpacity>
                 </View>
 
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -216,10 +301,18 @@ export default function HomeScreen({ navigation }: any) {
                     </Text>
                 </View>
 
-                <View style={[styles.statsCard, { backgroundColor: darkMode ? '#1e293b' : '#e2e8f0' }]}>
+                <View
+                    style={[
+                        styles.statsCard,
+                        {
+                            backgroundColor: darkMode ? '#1e293b' : '#e2e8f0',
+                            paddingBottom: 16,
+                        },
+                    ]}
+                >
                     <View style={styles.statsRow}>
                         <View style={styles.statBlock}>
-                            <Text style={styles.statNumber}>1,240</Text>
+                            <Text style={styles.statNumber}>1,293</Text>
                             <Text style={styles.statLabel}>Calories</Text>
                         </View>
 
@@ -229,19 +322,33 @@ export default function HomeScreen({ navigation }: any) {
                         </View>
 
                         <View style={styles.statBlock}>
-                            <Text style={styles.statNumber}>7,820</Text>
+                            <Text style={styles.statNumber}>9,280</Text>
                             <Text style={styles.statLabel}>Steps</Text>
                         </View>
                     </View>
 
-                    <View style={styles.graphContainer}>
-                        <View style={[styles.graphBar, { height: 30, backgroundColor: darkMode ? '#22c55e' : '#16a34a' }]} />
-                        <View style={[styles.graphBar, { height: 45, backgroundColor: darkMode ? '#22c55e' : '#16a34a' }]} />
-                        <View style={[styles.graphBar, { height: 20, backgroundColor: darkMode ? '#22c55e' : '#16a34a' }]} />
-                        <View style={[styles.graphBar, { height: 60, backgroundColor: darkMode ? '#22c55e' : '#16a34a' }]} />
-                        <View style={[styles.graphBar, { height: 35, backgroundColor: darkMode ? '#22c55e' : '#16a34a' }]} />
-                        <View style={[styles.graphBar, { height: 50, backgroundColor: darkMode ? '#22c55e' : '#16a34a' }]} />
-                        <View style={[styles.graphBar, { height: 25, backgroundColor: darkMode ? '#22c55e' : '#16a34a' }]} />
+                    <View style={{ height: 16 }} />
+
+                    <View
+                        style={{
+                            height: 120,
+                            flexDirection: 'row',
+                            alignItems: 'flex-end',
+                            justifyContent: 'space-between',
+                            paddingHorizontal: 10,
+                        }}
+                    >
+                        {graphData.map((value, index) => (
+                            <View
+                                key={index}
+                                style={{
+                                    width: 10,
+                                    height: Math.min(value * 2, 100), // prevents overflow
+                                    backgroundColor: darkMode ? '#22c55e' : '#16a34a',
+                                    borderRadius: 4,
+                                }}
+                            />
+                        ))}
                     </View>
                 </View>
 
