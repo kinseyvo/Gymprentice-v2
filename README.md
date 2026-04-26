@@ -1,97 +1,227 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# Gymprentice 💪🤖
 
-# Getting Started
+Gymprentice is an AI-powered mobile fitness application designed to help users manage workouts, nutrition, gym discovery, and personal fitness goals in one centralized platform.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+Originally created during undergraduate studies, Gymprentice was redesigned and expanded as a graduate-level full-stack software engineering project using modern cloud technologies and artificial intelligence.
 
-## Step 1: Start Metro
+---
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## 📌 Overview
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+Many fitness applications focus on only one area such as workouts, nutrition, or tracking, while locking useful features behind subscriptions. Gymprentice was developed to provide a free, user-friendly, and intelligent all-in-one fitness solution.
 
-```sh
-# Using npm
-npm start
+The application combines workout planning, meal guidance, scheduling, progress tools, community interaction, and personalized AI recommendations into one mobile platform.
 
-# OR using Yarn
-yarn start
+---
+
+## ✨ Features
+
+### 🔐 Authentication & Account Management
+
+- Secure user registration and login
+- Email verification
+- Password reset functionality
+- Persistent user sessions
+- Profile editing
+- Profile image upload
+- Secure account deletion with re-authentication
+
+---
+
+### 🏋️ Workout Management
+
+- Browse workout categories
+- View exercise details
+- Save favorite workouts
+- Remove saved workouts
+- Track completed workouts
+- Personalized workout recommendations
+
+---
+
+### 🥗 Nutrition Tracking
+
+- Search foods and meals
+- View calories, protein, carbs, and fats
+- Log meals
+- Browse meal categories
+- Personalized nutrition suggestions
+
+---
+
+### 🤖 AI-Powered Personalization
+
+Powered by the OpenAI API:
+
+- Customized workout routines
+- Personalized meal recommendations
+- Daily fitness tips
+- Adaptive responses based on goals and preferences
+
+---
+
+### 📍 Gym Finder
+
+Powered by Google Maps API:
+
+- Search gyms by ZIP code
+- Interactive map markers
+- Nearby gym listings
+- Save favorite gyms
+
+---
+
+### 📅 Scheduling & Planning
+
+- Weekly planner
+- Calendar system
+- Add and manage events
+- Organize workouts and meals
+
+---
+
+### 🌐 Community Features
+
+- User posts
+- Likes
+- Ratings
+- Reviews
+- Shared fitness engagement
+
+---
+
+### 🌙 UI / UX Enhancements
+
+- Clean dashboard layout
+- Persistent navigation footer
+- Expandable cards
+- Modal views
+- Dark mode support
+- Responsive mobile design
+
+---
+
+## 🛠 Tech Stack
+
+### Frontend
+
+- React Native
+- TypeScript
+
+### Backend / Cloud
+
+- Firebase Authentication
+- Firestore Database
+- Firebase Storage
+
+### APIs & External Services
+
+- OpenAI API
+- Google Maps API (Places + Geocoding)
+- API Ninjas Exercise API
+- API Ninjas Nutrition API
+
+## Development Tools
+
+- Android Studio
+- Visual Studio Code
+- GitHub
+- Trello
+
+---
+
+## 🏗 System Architecture
+
+Gymprentice follows a client-cloud architecture:
+
+```text
+React Native Mobile App
+        ↓
+Firebase Authentication
+Firestore Database
+Firebase Storage
+        ↓
+External APIs:
+- OpenAI API
+- Google Maps API
+- API Ninjas APIs
 ```
 
-## Step 2: Build and run your app
+## Benefits
+- Scalable structure
+- Modular design
+- Real-time synchronization
+- Maintainable architecture
+- Easy future expansion
 
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
+## Database Design
+- Firestore is organized around authenticated users using Firebase UID values.
+- Main Collections:
+  - Users
+  - Workouts
+  - Nutrition Logs
+  - Schedules
+  - Saved Workouts
+  - Favorite Gyms
+  - Challenges
+  - Community Posts
 
-### Android
+## Installation & Setup
 
-```sh
-# Using npm
-npm run android
+### Prerequisites
+- Install the following:
+  - Node.js
+  - Android Studio
+  - Visual Studio Code
+  - Firebase 
 
-# OR using Yarn
-yarn android
+### Clone Repository
+```text
+git clone https://github.com/kinseyvo/Gymprentice-v2.git
+cd Gymprentice
 ```
 
-### iOS
-
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
+### Install Dependencies
+```text
+npm install
 ```
 
-Then, and every time you update your native dependencies, run:
+### Configure Environment
+- Add required configuration files and API keys:
+  - google-services.json
+  - Firebase configuration
+  - OpenAI API key
+  - Google Maps API key
+  - API Ninjas API key
 
-```sh
-bundle exec pod install
+### Run Application
+```text
+npx react-native start
+npx react-native run-android
 ```
 
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
+## How It Works
+1. User registers or logs in
+2. Firebase authenticates the account
+3. User enters main dashboard
+4. Features become available:
+  - Workouts
+  - Nutrition
+  - AI suggestions
+  - Scheduling
+  - Gym finder
+  - Community 
+5. User data is stored in Firestore in real time
 
-```sh
-# Using npm
-npm run ios
+## 🔮 Future Improvements
+- Real-time analytics charts
+- Advanced AI coaching
+- Better long-term personalization
+- Leaderboards
+- Group challenges
+- Direct messaging
+- iOS support
+- Performance optimization
 
-# OR using Yarn
-yarn ios
-```
-
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
-
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
-
-## Step 3: Modify your app
-
-Now that you have successfully run the app, let's make changes!
-
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
-
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
-
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
-
-## Congratulations! :tada:
-
-You've successfully run and modified your React Native App. :partying_face:
-
-### Now what?
-
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
-
-# Troubleshooting
-
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
-
-# Learn More
-
-To learn more about React Native, take a look at the following resources:
-
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+## 📄 License
+This project is intended for educational, portfolio, and demonstration purposes.
